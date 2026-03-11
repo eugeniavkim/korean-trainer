@@ -1,6 +1,6 @@
 # 한국어 AI 보안 타이핑 — Korean AI Security Typing Trainer
 
-A Korean typing trainer for AI researchers, ML engineers, and security professionals. Practice the technical vocabulary you actually use — in Korean. Built to run offline as an iPhone PWA.
+A Korean typing trainer for AI researchers, ML engineers, and security professionals. Practice the technical vocabulary you actually use — in Korean. Built to run offline.
 
 ---
 
@@ -52,11 +52,10 @@ Hundreds of terms across 8 technical categories, with definitions, romanization,
 
 ## Install on iPhone
 
-1. Deploy to GitHub Pages (or any static host)
-2. Open the URL in **Safari**
-3. Tap the Share button → **Add to Home Screen**
-4. Open it once on WiFi to cache everything
-5. Works offline from then on
+1. Open the [URL](https://eugeniavkim.github.io/korean-trainer/) in **Safari**
+2. Tap the Share button → **Add to Home Screen**
+3. Open it once on WiFi to cache everything
+4. Works offline from then on
 
 ## Enable Korean keyboard on iPhone
 
