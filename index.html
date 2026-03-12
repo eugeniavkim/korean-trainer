@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="한국어 타이핑" />
+  <title>한국어 타이핑 트레이너 — AI Security</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #07090f;
+      --bg2:       #0d1220;
+      --bg3:       #131828;
+      --border:    #1e2a40;
+      --accent:    #00e5ff;
+      --accent2:   #7c4dff;
+      --correct:   #00e676;
+      --wrong:     #ff1744;
+      --text:      #e0e8ff;
+      --muted:     #4a5568;
+      --card:      #0d1423;
+      --glow:      0 0 20px rgba(0,229,255,0.25);
+      --fs-scale:  1;
+    }
+    /* ── LIGHT MODE ── */
+    body.light {
+      --bg:        #f0f4f8;
+      --bg2:       #e2e8f0;
+      --bg3:       #d4dce8;
+      --border:    #b0bcd0;
+      --accent:    #0077aa;
+      --accent2:   #5b21b6;
+      --correct:   #15803d;
+      --wrong:     #dc2626;
+      --text:      #1a202c;
+      --muted:     #64748b;
+      --card:      #ffffff;
+      --glow:      0 0 12px rgba(0,119,170,0.15);
+    }
+    body.light::before { opacity: 0; }
+    body.light .code-box { background: #f8f9fc; border-color: rgba(0,119,170,0.2); }
+    body.light .code-pre { color: #334155; }
+    body.light .code-pre .c  { color: #94a3b8; }
+    body.light .code-pre .k  { color: #7c3aed; }
+    body.light .code-pre .s  { color: #15803d; }
+    body.light .code-pre .n  { color: #1d4ed8; }
+    body.light .code-pre .num{ color: #c2410c; }
+    body.light .typing-input  { caret-color: var(--accent); }
+    body.light .gi-def        { color: #475569; }
+    body.light .def-ko        { color: #475569; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #app { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 16px; }
+
+    /* HEADER */
+    header {
+      display: flex; align-items: center;
+      padding: 10px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+    }
+    .logo { display: flex; flex-direction: column; gap: 2px; }
+    .logo-ko { font-family: 'Noto Sans KR',sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-shadow: var(--glow); }
+    .logo-en { font-size: 8px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; }
+
+    /* BOTTOM BAR */
+    .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 50; }
+    .bottom-stats { display: flex; gap: 24px; align-items: center; }
+    .bottom-stat { display: flex; flex-direction: column; align-items: center; }
+    .bottom-stat .stat-val { font-size: 20px; font-weight: 700; color: var(--accent); }
+    .bottom-stat .stat-label { font-size: 8px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .bottom-aa-btn { padding: 8px 18px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+    .bottom-aa-btn:hover { border-color: var(--accent); color: var(--accent); }
+    body { padding-bottom: 72px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+    .tab { flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--muted); font-family: 'IBM Plex Mono',monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 5px; transition: all 0.2s; }
+    .tab.active { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); box-shadow: var(--glow); }
+
+    /* CATEGORY PILLS */
+    .categories { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cat-pill { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); background: var(--bg2); cursor: pointer; transition: all 0.2s; }
+    .cat-pill.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.08); box-shadow: var(--glow); }
+
+    /* LIVE TIMER */
+    .timer-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding: 10px 14px;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; gap: 12px;
+    }
+    .timer-live { display: flex; align-items: baseline; gap: 5px; }
+    .timer-val {
+      font-size: 28px; font-weight: 600; color: var(--accent);
+      font-variant-numeric: tabular-nums; min-width: 72px; transition: color 0.3s;
+    }
+    .timer-val.warning { color: #ffab00; }
+    .timer-val.danger  { color: var(--wrong); animation: timerPulse 0.5s infinite; }
+    @keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .timer-unit { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    /* pace bar under timer */
+    .pace-bar-wrap { height: 3px; background: var(--bg3); border-radius: 3px; margin-top: 5px; width: 100%; overflow: hidden; }
+    .pace-bar { height: 100%; border-radius: 3px; transition: width 0.1s linear, background 0.3s; }
+    .timer-records { display: flex; gap: 16px; }
+    .timer-rec { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .timer-rec-val { font-size: 14px; font-weight: 600; color: var(--text); }
+    .timer-rec-val.gold { color: #ffd740; }
+    .timer-rec-label { font-size: 8px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+
+    /* TYPING CARD */
+    .typing-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; margin-bottom: 16px; position: relative; overflow: hidden;
+    }
+    .typing-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+    }
+    .phrase-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .phrase-category { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent2); border: 1px solid var(--accent2); padding: 3px 8px; border-radius: 3px; }
+    .phrase-counter { font-size: 10px; color: var(--muted); }
+    .korean-target { font-family: 'Noto Sans KR',sans-serif; font-size: clamp(20px,5vw,30px); line-height: 1.6; margin-bottom: 10px; letter-spacing: 1px; min-height: 48px; transition: font-size 0.2s; }
+    body.text-lg .korean-target  { font-size: clamp(26px,6vw,38px); }
+    body.text-xl .korean-target  { font-size: clamp(32px,7vw,48px); }
+    body.text-lg .english-translation, body.text-xl .english-translation { font-size: 15px; }
+    body.text-lg .romanization,        body.text-xl .romanization        { font-size: 15px; }
+    body.text-lg .definition-box,      body.text-xl .definition-box      { font-size: 14px; }
+    body.text-lg .def-ko,              body.text-xl .def-ko              { font-size: 15px; }
+    body.text-lg .def-en,              body.text-xl .def-en              { font-size: 14px; }
+    body.text-xl .def-en                                                  { font-size: 16px; }
+    body.text-xl .definition-box                                          { font-size: 16px; }
+    body.text-lg .code-pre,            body.text-xl .code-pre            { font-size: 13px; }
+    body.text-xl .code-pre            { font-size: 15px; }
+    .korean-target .char { display: inline-block; transition: color 0.1s; }
+    .char.correct { color: var(--correct); }
+    .char.wrong    { color: var(--wrong); background: rgba(255,23,68,0.12); border-radius: 2px; }
+    .char.current  { color: var(--text); border-bottom: 2px solid var(--accent); animation: blink 1s infinite; }
+    .char.pending  { color: var(--muted); }
+    @keyframes blink { 0%,100%{border-color:var(--accent)} 50%{border-color:transparent} }
+    .english-translation { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-style: italic; }
+    .romanization { font-size: 12px; color: var(--accent2); margin-bottom: 8px; min-height: 18px; }
+
+    /* AI definition box */
+    .definition-box {
+      background: rgba(124,77,255,0.06); border: 1px solid rgba(124,77,255,0.25);
+      border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;
+      font-size: 11px; line-height: 1.7; color: var(--text); display: none;
+    }
+    .definition-box.visible { display: block; }
+    .def-en { color: var(--text); margin-bottom: 4px; }
+    .def-ko { font-family: 'Noto Sans KR',sans-serif; color: rgba(200,185,255,0.85); font-size: 12px; }
+    .def-toggle { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent2); cursor: pointer; margin-bottom: 8px; display: inline-block; }
+    .def-toggle:hover { text-decoration: underline; }
+
+    .last-time-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--correct); margin-bottom: 10px; min-height: 18px; transition: opacity 0.4s; }
+    .last-time-badge.hidden { opacity: 0; }
+    .last-time-badge.pb { color: #ffd740; }
+
+    .input-area { position: relative; }
+    .typing-input {
+      width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; font-family: 'Noto Sans KR',sans-serif; font-size: 18px;
+      color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      caret-color: var(--accent);
+    }
+    .typing-input:focus { border-color: var(--accent); box-shadow: var(--glow); }
+    .typing-input.error { border-color: var(--wrong); box-shadow: 0 0 12px rgba(255,23,68,0.2); animation: shake 0.3s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+    /* KEYBOARD SECTION */
+    .keyboard-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .section-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .keyboard { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .key-row { display: flex; gap: 5px; }
+    .key { width: 34px; height: 34px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.15s; }
+    .key:hover { border-color: var(--accent); background: rgba(0,229,255,0.08); }
+    .key-latin { font-size: 8px; color: var(--muted); line-height: 1; }
+    .key-korean { font-family: 'Noto Sans KR',sans-serif; font-size: 11px; color: var(--accent); line-height: 1; }
+
+    /* PROGRESS */
+    .progress-bar-wrap { height: 3px; background: var(--bg3); border-radius: 3px; margin-bottom: 16px; overflow: hidden; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 3px; transition: width 0.3s ease; }
+
+    /* CONTROLS */
+    .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--text); font-family: 'IBM Plex Mono',monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
+    .btn-primary:hover { background: rgba(0,229,255,0.2); }
+
+    /* RESULT FLASH */
+    .result-flash {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.8);
+      background: var(--bg2); border: 2px solid var(--correct); border-radius: 16px;
+      padding: 30px 50px; text-align: center; opacity: 0; pointer-events: none;
+      transition: all 0.3s; z-index: 100;
+    }
+    .result-flash.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    .result-flash .result-ko { font-family: 'Noto Sans KR',sans-serif; font-size: 28px; color: var(--correct); margin-bottom: 6px; }
+    .result-flash .result-wpm { font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+
+    /* GLOSSARY */
+    #glossary-view { display: none; }
+    #practice-view { display: block; }
+    .glossary-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .glossary-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; }
+    .glossary-item:hover { border-color: var(--accent); background: rgba(0,229,255,0.04); }
+    .glossary-item:active { transform: scale(0.98); }
+    .gi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .gi-ko { font-family: 'Noto Sans KR',sans-serif; font-size: 18px; color: var(--text); }
+    .gi-right { text-align: right; }
+    .gi-en { font-size: 11px; color: var(--muted); }
+    .gi-rom { font-size: 10px; color: var(--accent2); margin-top: 2px; }
+    .gi-cat { font-size: 9px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+    .gi-def { font-size: 11px; color: rgba(200,185,255,0.7); margin-top: 6px; font-family: 'Noto Sans KR',sans-serif; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 6px; display: none; }
+    .gi-def.show { display: block; }
+
+    /* KEYBOARD VIEW */
+    #keyboard-view { display: none; }
+    .kb-layout { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .kb-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .kb-row { display: flex; gap: 5px; margin-bottom: 6px; flex-wrap: wrap; }
+    .kb-key { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 8px 6px; min-width: 46px; text-align: center; }
+    .kb-key .top { font-family: 'Noto Sans KR'; font-size: 14px; color: var(--accent); }
+    .kb-key .bot { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .hint-box { background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.2); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; font-size: 12px; line-height: 1.8; color: var(--text); }
+    .hint-box strong { color: var(--accent); }
+
+    /* OFFLINE BADGE */
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+    /* SCROLL */
+    #glossary-view, #keyboard-view { max-height: calc(100vh - 200px); overflow-y: auto; padding-bottom: 80px; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* DIFFICULTY BUTTONS */
+    .diff-btns { display: flex; gap: 6px; margin-top: 8px; }
+    .diff-btn {
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 16px;
+      background: var(--bg3); color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+    }
+    .diff-btn:hover { border-color: var(--accent); color: var(--text); }
+    .diff-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.1); box-shadow: var(--glow); }
+
+    /* TTS BUTTON */
+    .tts-btn {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); font-size: 14px; padding: 4px 8px; cursor: pointer;
+      margin-bottom: 8px; transition: all 0.2s; display: inline-block;
+    }
+    .tts-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* CODE BOX */
+    .code-box {
+      background: #0a0f1e; border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
+      display: none; overflow-x: auto;
+    }
+    .code-box.visible { display: block; }
+    .code-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .code-pre {
+      font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.7;
+      color: #a8d8ff; white-space: pre; margin: 0;
+    }
+    .code-pre .c  { color: #546e8a; }  /* comment */
+    .code-pre .k  { color: #c792ea; }  /* keyword */
+    .code-pre .s  { color: #c3e88d; }  /* string */
+    .code-pre .n  { color: #82aaff; }  /* function/class name */
+    .code-pre .v  { color: #f78c6c; }  /* variable */
+    .code-pre .num{ color: #f78c6c; }  /* number */
+
+    /* MOBILE */
+    @media (max-width: 480px) {
+      #app { padding: 10px; }
+      .typing-card { padding: 16px; }
+      .key { width: 28px; height: 28px; font-size: 8px; }
+      .key-korean { font-size: 9px; }
+      .controls { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="logo-ko">한국어 타이핑</div>
+      <div class="logo-en">AI Security Trainer</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('practice')">⌨ Practice</button>
+    <button class="tab" onclick="switchTab('glossary')">📖 Glossary</button>
+    <button class="tab" onclick="switchTab('keyboard')">🗺 Keyboard</button>
+  </div>
+
+  <!-- PRACTICE VIEW -->
+  <div id="practice-view">
+    <div class="categories" id="cat-container"></div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+    <!-- LIVE TIMER -->
+    <div class="timer-row">
+      <div style="flex:1">
+        <div class="timer-live">
+          <div class="timer-val" id="timer-display">0.0</div>
+          <div class="timer-unit">sec</div>
+          <div id="diff-label" style="font-size:11px;color:var(--muted);margin-left:10px;letter-spacing:1px;"></div>
+        </div>
+        <div class="pace-bar-wrap"><div class="pace-bar" id="pace-bar" style="width:0%;background:var(--correct)"></div></div>
+        <div class="diff-btns">
+          <button class="diff-btn active" data-diff="easy"   onclick="setDifficulty('easy')">🌱 Easy</button>
+          <button class="diff-btn"        data-diff="medium" onclick="setDifficulty('medium')">⚡ Medium</button>
+          <button class="diff-btn"        data-diff="hard"   onclick="setDifficulty('hard')">🔥 Hard</button>
+        </div>
+      </div>
+      <div class="timer-records">
+        <div class="timer-rec"><div class="timer-rec-val" id="timer-last">—</div><div class="timer-rec-label">Last</div></div>
+        <div class="timer-rec"><div class="timer-rec-val gold" id="timer-pb">—</div><div class="timer-rec-label">🏆 Best</div></div>
+      </div>
+    </div>
+
+    <div class="typing-card">
+      <div class="phrase-meta">
+        <span class="phrase-category" id="phrase-cat">—</span>
+        <span class="phrase-counter" id="phrase-counter">1 / 1</span>
+      </div>
+      <div class="korean-target" id="korean-display"></div>
+      <div class="english-translation" id="english-display"></div>
+      <div class="romanization" id="roman-display"></div>
+      <span class="def-toggle" id="def-toggle" onclick="toggleDef()" style="display:none">▸ Definition</span>
+      <span class="def-toggle" id="code-toggle" onclick="toggleCode()" style="display:none;margin-left:12px;">▸ PyTorch</span>
+      <div class="definition-box" id="definition-box">
+        <div class="def-en" id="def-en"></div>
+        <div class="def-ko" id="def-ko"></div>
+      </div>
+      <div class="code-box" id="code-box">
+        <div class="code-label">// PyTorch example</div>
+        <pre class="code-pre" id="code-pre"></pre>
+      </div>
+      <div class="last-time-badge hidden" id="last-time-badge"></div>
+      <div class="input-area">
+        <input class="typing-input" id="typing-input" type="text"
+          placeholder="한국어로 입력하세요…"
+          autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="toggleRoman()">🐶 Romanization</button>
+      <button class="btn" id="shuffle-btn" onclick="toggleShuffle()">🔀 Shuffle</button>
+      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Light/dark mode">☀️</button>
+      <button class="btn btn-primary" onclick="nextPhrase()">Next →</button>
+    </div>
+
+    <div class="keyboard-section">
+      <div class="section-title">// keyboard hint — dubeolsik (두벌식)</div>
+      <div class="keyboard" id="mini-keyboard"></div>
+    </div>
+  </div>
+
+  <!-- GLOSSARY VIEW -->
+  <div id="glossary-view">
+    <div class="categories" id="gloss-cat-container"></div>
+    <div class="glossary-grid" id="glossary-grid"></div>
+  </div>
+
+  <!-- KEYBOARD VIEW -->
+  <div id="keyboard-view">
+    <div class="kb-layout">
+      <div class="kb-title">// Standard Korean Keyboard (두벌식 / Dubeolsik)</div>
+      <div id="full-keyboard"></div>
+    </div>
+    <div class="hint-box">
+      <strong>How to enable Korean on your device:</strong><br/>
+      <strong>PC (Windows):</strong> Settings → Time &amp; Language → Language → Add Korean → then press <strong>Alt+Shift</strong> to switch<br/>
+      <strong>iPhone:</strong> Settings → General → Keyboard → Keyboards → Add New Keyboard → Korean (2-Set) → tap 🌐 to switch
+    </div>
+    <div class="hint-box">
+      <strong>두벌식 Rules:</strong><br/>
+      Consonants (자음) = <strong>left side</strong> of keyboard &nbsp;|&nbsp; Vowels (모음) = <strong>right side</strong><br/>
+      Syllable = Initial consonant + Vowel (+ optional final consonant)<br/>
+      Example: 보안 (security) → ㅂ+ㅗ+ㅇ+ㅏ+ㄴ → type: <strong>q h d k s</strong>
+    </div>
+    <div class="hint-box">
+      <strong>Timer color guide:</strong><br/>
+      🟢 Green = on pace &nbsp;|&nbsp; 🟡 Yellow = a bit slow &nbsp;|&nbsp; 🔴 Red = slow<br/>
+      Pace is calculated per-character so longer phrases give you more time.
+    </div>
+  </div>
+</div>
+
+<div class="result-flash" id="result-flash">
+  <div class="result-ko">정확!</div>
+  <div class="result-wpm" id="flash-wpm"></div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-stats">
+    <div class="bottom-stat"><div class="stat-val" id="stat-wpm">0</div><div class="stat-label">WPM</div></div>
+    <div class="bottom-stat"><div class="stat-val" id="stat-acc">—</div><div class="stat-label">ACC%</div></div>
+    <div class="bottom-stat"><div class="stat-val" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
+  </div>
+  <button class="bottom-aa-btn" id="textsize-btn" onclick="cycleTextSize()" title="Text size">Aa</button>
+</div>
+
+
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  SMART TIMER — difficulty-scaled per character
+//  Easy:   0.9s/char  → ~12 WPM  (beginner, lots of time)
+//  Medium: 0.55s/char → ~20 WPM  (conversational pace)
+//  Hard:   0.30s/char → ~35 WPM  (native-level pressure)
+//  Warning fires at 1.4× target, Danger at 2.0× target
+// ═══════════════════════════════════════════════════════════════
+const DIFFICULTY = {
+  easy:   { pace: 0.90, label: '쉬움',   emoji: '🌱' },
+  medium: { pace: 0.55, label: '보통',   emoji: '⚡' },
+  hard:   { pace: 0.30, label: '어려움', emoji: '🔥' },
+};
+const WARN_MULT   = 1.4;
+const DANGER_MULT = 2.0;
+
+// ═══════════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════════
+const PHRASES = [
+
+// ─────────────────────────────────────────────────────────────
+//  CORE SECURITY
+// ─────────────────────────────────────────────────────────────
+{ ko:"보안",             en:"security",                roman:"bo-an",                cat:"core" },
+{ ko:"사이버 보안",       en:"cybersecurity",           roman:"sa-i-beo bo-an",       cat:"core" },
+{ ko:"인공지능 보안",     en:"AI security",             roman:"in-gong-ji-neung bo-an",cat:"core" },
+{ ko:"위협 분석",         en:"threat analysis",         roman:"wi-hyeob bun-seok",    cat:"core" },
+{ ko:"취약점",            en:"vulnerability",           roman:"chwi-yak-jeom",        cat:"core" },
+{ ko:"공격자",            en:"attacker / adversary",    roman:"gong-gyeok-ja",        cat:"core" },
+{ ko:"방어",              en:"defense",                 roman:"bang-eo",              cat:"core" },
+{ ko:"악성코드",          en:"malware",                 roman:"ak-seong-ko-deu",      cat:"core" },
+{ ko:"침해 사고",         en:"security incident",       roman:"chim-hae sa-go",       cat:"core" },
+{ ko:"데이터 유출",       en:"data breach",             roman:"de-i-teo yu-chul",     cat:"core" },
+{ ko:"암호화",            en:"encryption",              roman:"am-ho-hwa",            cat:"core" },
+{ ko:"복호화",            en:"decryption",              roman:"bok-ho-hwa",           cat:"core" },
+{ ko:"인증",              en:"authentication",          roman:"in-jeung",             cat:"core" },
+{ ko:"권한 부여",         en:"authorization",           roman:"gwon-han bu-yeo",      cat:"core" },
+{ ko:"접근 제어",         en:"access control",          roman:"jeop-geun je-eo",      cat:"core" },
+{ ko:"방화벽",            en:"firewall",                roman:"bang-hwa-byeok",       cat:"core" },
+{ ko:"침입 탐지",         en:"intrusion detection",     roman:"chim-ip tam-ji",       cat:"core" },
+{ ko:"침입 방지",         en:"intrusion prevention",    roman:"chim-ip bang-ji",      cat:"core" },
+{ ko:"네트워크 보안",     en:"network security",        roman:"ne-teu-wo-keu bo-an",  cat:"core" },
+{ ko:"엔드포인트 보안",   en:"endpoint security",       roman:"en-deu-po-in-teu bo-an",cat:"core" },
+{ ko:"피싱",              en:"phishing",                roman:"pi-sing",              cat:"core" },
+{ ko:"스피어 피싱",       en:"spear phishing",          roman:"seu-pi-eo pi-sing",    cat:"core" },
+{ ko:"랜섬웨어",          en:"ransomware",              roman:"raen-seom-we-eo",      cat:"core" },
+{ ko:"스파이웨어",        en:"spyware",                 roman:"seu-pa-i-we-eo",       cat:"core" },
+{ ko:"트로이 목마",       en:"trojan horse",            roman:"teu-ro-i mong-ma",     cat:"core" },
+{ ko:"바이러스",          en:"virus",                   roman:"ba-i-reo-seu",         cat:"core" },
+{ ko:"웜",                en:"worm",                    roman:"wom",                  cat:"core" },
+{ ko:"봇넷",              en:"botnet",                  roman:"bon-net",              cat:"core" },
+{ ko:"제로데이",          en:"zero-day",                roman:"je-ro-de-i",           cat:"core" },
+{ ko:"패치",              en:"patch",                   roman:"pae-chi",              cat:"core" },
+{ ko:"익스플로잇",        en:"exploit",                 roman:"ik-seu-peul-lo-it",    cat:"core" },
+{ ko:"페이로드",          en:"payload",                 roman:"pe-i-ro-deu",          cat:"core" },
+{ ko:"백도어",            en:"backdoor",                roman:"baek-do-eo",           cat:"core" },
+{ ko:"루트킷",            en:"rootkit",                 roman:"ru-teu-kit",           cat:"core" },
+{ ko:"키로거",            en:"keylogger",               roman:"ki-ro-geo",            cat:"core" },
+{ ko:"사회공학",          en:"social engineering",      roman:"sa-hoe-gong-hak",      cat:"core" },
+{ ko:"신원 도용",         en:"identity theft",          roman:"si-nwon do-yong",      cat:"core" },
+{ ko:"내부자 위협",       en:"insider threat",          roman:"nae-bu-ja wi-hyeob",   cat:"core" },
+{ ko:"공급망 공격",       en:"supply chain attack",     roman:"gong-geup-mang gong-gyeok",cat:"core" },
+{ ko:"위협 행위자",       en:"threat actor",            roman:"wi-hyeob haeng-wi-ja", cat:"core" },
+{ ko:"지속적 위협",       en:"advanced persistent threat (APT)", roman:"ji-sok-jeok wi-hyeob",cat:"core" },
+{ ko:"사이버 첩보",       en:"cyber espionage",         roman:"sa-i-beo cheob-bo",    cat:"core" },
+{ ko:"사이버 전쟁",       en:"cyber warfare",           roman:"sa-i-beo jeon-jaeng",  cat:"core" },
+{ ko:"핵티비즘",          en:"hacktivism",              roman:"haek-ti-bi-jeum",      cat:"core" },
+{ ko:"위협 인텔리전스",   en:"threat intelligence",     roman:"wi-hyeob in-tel-li-jeon-seu",cat:"core" },
+{ ko:"위협 사냥",         en:"threat hunting",          roman:"wi-hyeob sa-nyang",    cat:"core" },
+{ ko:"침투 테스트",       en:"penetration testing",     roman:"chim-tu te-seu-teu",   cat:"core" },
+{ ko:"취약점 공개",       en:"responsible disclosure",  roman:"chwi-yak-jeom gong-gae",cat:"core" },
+{ ko:"버그 바운티",       en:"bug bounty",              roman:"beo-geu ba-un-ti",     cat:"core" },
+{ ko:"보안 감사",         en:"security audit",          roman:"bo-an gam-sa",         cat:"core" },
+{ ko:"위험 평가",         en:"risk assessment",         roman:"wi-heom pyeong-ga",    cat:"core" },
+{ ko:"보안 운영 센터",    en:"SOC (Security Operations Center)", roman:"bo-an un-yeong sen-teo",cat:"core" },
+{ ko:"사고 대응",         en:"incident response",       roman:"sa-go dae-eung",       cat:"core" },
+{ ko:"디지털 포렌식",     en:"digital forensics",       roman:"di-ji-teol po-ren-sik",cat:"core" },
+{ ko:"보안 오케스트레이션",en:"security orchestration",  roman:"bo-an o-ke-seu-teu-re-i-syeon",cat:"core" },
+{ ko:"제로 트러스트",     en:"zero trust",              roman:"je-ro teu-reo-seu-teu",cat:"core",
+  def_en:"A security model that requires strict verification for every user and device regardless of network location.",
+  def_ko:"네트워크 위치와 무관하게 모든 사용자와 장치에 대해 엄격한 검증을 요구하는 보안 모델입니다." },
+{ ko:"최소 권한 원칙",    en:"principle of least privilege", roman:"choe-so gwon-han won-chik",cat:"core",
+  def_en:"Granting users only the minimum access rights needed to perform their job functions.",
+  def_ko:"사용자에게 업무 수행에 필요한 최소한의 접근 권한만 부여하는 원칙입니다." },
+{ ko:"심층 방어",         en:"defense in depth",        roman:"sim-cheung bang-eo",   cat:"core",
+  def_en:"A layered security strategy using multiple independent controls so no single failure exposes the system.",
+  def_ko:"단일 실패로 시스템이 노출되지 않도록 여러 독립적 통제를 사용하는 계층적 보안 전략입니다." },
+{ ko:"공격 표면",         en:"attack surface",          roman:"gong-gyeok pyo-myeon", cat:"core" },
+{ ko:"위협 모델링",       en:"threat modeling",         roman:"wi-hyeob mo-del-ling", cat:"core" },
+{ ko:"보안 아키텍처",     en:"security architecture",   roman:"bo-an a-ki-tek-cheo",  cat:"core" },
+{ ko:"보안 기준선",       en:"security baseline",       roman:"bo-an gi-jun-seon",    cat:"core" },
+{ ko:"보안 강화",         en:"hardening",               roman:"bo-an gang-hwa",       cat:"core" },
+{ ko:"패치 관리",         en:"patch management",        roman:"pae-chi gwal-li",      cat:"core" },
+{ ko:"구성 관리",         en:"configuration management",roman:"gu-seong gwal-li",     cat:"core" },
+{ ko:"로그 관리",         en:"log management",          roman:"ro-geu gwal-li",       cat:"core" },
+{ ko:"보안 정보 이벤트 관리",en:"SIEM",                 roman:"bo-an jeong-bo i-ben-teu gwal-li",cat:"core" },
+{ ko:"취약점 관리",       en:"vulnerability management",roman:"chwi-yak-jeom gwal-li",cat:"core" },
+{ ko:"보안 테스트",       en:"security testing",        roman:"bo-an te-seu-teu",     cat:"core" },
+{ ko:"코드 검토",         en:"code review",             roman:"ko-deu geom-to",       cat:"core" },
+{ ko:"정적 분석",         en:"static analysis",         roman:"jeong-jeok bun-seok",  cat:"core" },
+{ ko:"동적 분석",         en:"dynamic analysis",        roman:"dong-jeok bun-seok",   cat:"core" },
+{ ko:"퍼징",              en:"fuzzing",                 roman:"peo-jing",             cat:"core",
+  def_en:"Automated testing that feeds unexpected or malformed input to a system to discover crashes and vulnerabilities.",
+  def_ko:"시스템에 예상치 못한 또는 잘못된 입력을 공급하여 충돌 및 취약점을 발견하는 자동화 테스트입니다." },
+{ ko:"역공학",            en:"reverse engineering",     roman:"yeok-gong-hak",        cat:"core" },
+{ ko:"멀웨어 분석",       en:"malware analysis",        roman:"meol-we-eo bun-seok",  cat:"core" },
+{ ko:"샌드박스",          en:"sandbox",                 roman:"saen-deu-bak-seu",     cat:"core" },
+{ ko:"격리",              en:"isolation / quarantine",  roman:"gyeong-ni",            cat:"core" },
+{ ko:"허니팟",            en:"honeypot",                roman:"heo-ni-pat",           cat:"core",
+  def_en:"A decoy system designed to attract and detect attackers while studying their techniques.",
+  def_ko:"공격자를 유인하고 탐지하면서 그들의 기법을 연구하기 위해 설계된 미끼 시스템입니다." },
+{ ko:"사이버 킬 체인",    en:"cyber kill chain",        roman:"sa-i-beo kil che-in",  cat:"core" },
+{ ko:"MITRE ATT&CK",      en:"MITRE ATT&CK framework",  roman:"ma-i-teo aet-aen-si-ke",cat:"core",
+  def_en:"A globally-accessible knowledge base of adversary tactics and techniques based on real-world observations.",
+  def_ko:"실제 관찰을 기반으로 한 공격자 전술 및 기법의 전 세계적으로 접근 가능한 지식 베이스입니다." },
+{ ko:"OWASP",             en:"OWASP Top 10",            roman:"o-wap",                cat:"core",
+  def_en:"The Open Web Application Security Project's list of the 10 most critical web application security risks.",
+  def_ko:"가장 심각한 웹 애플리케이션 보안 위험 10가지를 정리한 오픈 웹 애플리케이션 보안 프로젝트 목록입니다." },
+{ ko:"CVE",               en:"Common Vulnerabilities & Exposures", roman:"si-bi-i",  cat:"core" },
+{ ko:"CVSS",              en:"Common Vulnerability Scoring System", roman:"si-bi-e-seu-seu",cat:"core" },
+{ ko:"보안 패치",         en:"security patch",          roman:"bo-an pae-chi",        cat:"core" },
+{ ko:"개인정보 보호",     en:"privacy protection",      roman:"gae-in-jeong-bo bo-ho",cat:"core" },
+{ ko:"개인식별정보",      en:"PII (personally identifiable information)", roman:"gae-in-sik-byeol-jeong-bo",cat:"core" },
+{ ko:"데이터 최소화",     en:"data minimization",       roman:"de-i-teo choe-so-hwa", cat:"core" },
+{ ko:"익명화",            en:"anonymization",           roman:"ing-myeong-hwa",       cat:"core" },
+{ ko:"가명화",            en:"pseudonymization",        roman:"ga-myeong-hwa",        cat:"core" },
+
+// ─────────────────────────────────────────────────────────────
+//  ATTACK TECHNIQUES
+// ─────────────────────────────────────────────────────────────
+{ ko:"적대적 공격",       en:"adversarial attack",      roman:"jeok-dae-jeok gong-gyeok",cat:"attack",
+  def_en:"Carefully crafted input designed to fool an ML model into making wrong predictions.",
+  def_ko:"ML 모델이 잘못된 예측을 하도록 유도하기 위해 정교하게 만들어진 입력입니다." },
+{ ko:"적대적 예제",       en:"adversarial example",     roman:"jeok-dae-jeok ye-je",  cat:"attack",
+  def_en:"An input with small, often imperceptible perturbations that cause a model to misclassify it.",
+  def_ko:"모델이 잘못 분류하도록 작고 종종 감지하기 어려운 perturbation이 추가된 입력입니다.",
+  code:`\u003cspan class="c"\u003e# FGSM — Fast Gradient Sign Method (Goodfellow et al. 2014)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: The simplest adversarial attack. Takes ONE gradient step in the\u003c/span\u003e
+\u003cspan class="c"\u003e# direction that MAXIMIZES loss. epsilon controls perturbation size.\u003c/span\u003e
+\u003cspan class="c"\u003e# Real use: test if your classifier breaks on barely-changed images.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003efgsm_attack\u003c/span\u003e(model, x, y, epsilon=\u003cspan class="num"\u003e0.03\u003c/span\u003e):
+    x.requires_grad = \u003cspan class="k"\u003eTrue\u003c/span\u003e
+    
+    loss = F.cross_entropy(model(x), y)
+    loss.backward()                    \u003cspan class="c"\u003e# compute ∂loss/∂x\u003c/span\u003e
+    
+    \u003cspan class="c"\u003e# Step in direction that INCREASES loss (breaks the model)\u003c/span\u003e
+    x_adv = x + epsilon * x.grad.sign()
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e x_adv.detach().clamp(\u003cspan class="num"\u003e0\u003c/span\u003e, \u003cspan class="num"\u003e1\u003c/span\u003e)  \u003cspan class="c"\u003e# keep valid image range\u003c/span\u003e
+
+\u003cspan class="c"\u003e# Demo: clean accuracy vs adversarial accuracy\u003c/span\u003e
+x_adv = fgsm_attack(model, x_test, y_test)
+\u003cspan class="n"\u003eprint\u003c/span\u003e(\u003cspan class="s"\u003ef"Clean acc: {eval(model, x_test):.1%}"\u003c/span\u003e)
+\u003cspan class="n"\u003eprint\u003c/span\u003e(\u003cspan class="s"\u003ef"Adv acc:   {eval(model, x_adv):.1%}"\u003c/span\u003e)  \u003cspan class="c"\u003e# often drops to \u003c 5%\u003c/span\u003e` },
+{ ko:"화이트박스 공격",   en:"white-box attack",        roman:"hwa-i-teu-bak-seu gong-gyeok",cat:"attack",
+  def_en:"An attack where the adversary has full access to the model architecture, weights, and gradients.",
+  def_ko:"공격자가 모델 아키텍처, 가중치, 기울기에 완전히 접근할 수 있는 공격입니다." },
+{ ko:"블랙박스 공격",     en:"black-box attack",        roman:"beul-laek-bak-seu gong-gyeok",cat:"attack",
+  def_en:"An attack using only query access to a model — no knowledge of internals.",
+  def_ko:"모델 내부 정보 없이 쿼리 접근만을 사용하는 공격입니다." },
+{ ko:"전이 공격",         en:"transferability attack",  roman:"jeon-i gong-gyeok",    cat:"attack",
+  def_en:"Using adversarial examples crafted on one model to attack a different model.",
+  def_ko:"한 모델에서 만든 적대적 예제를 다른 모델 공격에 사용하는 것입니다." },
+{ ko:"데이터 포이즈닝",   en:"data poisoning",          roman:"de-i-teo po-i-jeu-ning",cat:"attack",
+  def_en:"Injecting malicious training examples to corrupt a model's behavior at deployment.",
+  def_ko:"배포 시 모델의 동작을 망가뜨리기 위해 악의적인 학습 예제를 주입하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Label-flip poisoning: corrupt 5% of training labels\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Shows how poisoned training data = broken model at test time.\u003c/span\u003e
+\u003cspan class="c"\u003e# Real threat: attackers who can modify training data pipelines.\u003c/span\u003e
+
+\u003cspan class="k"\u003eimport\u003c/span\u003e torch
+\u003cspan class="k"\u003eimport\u003c/span\u003e numpy \u003cspan class="k"\u003eas\u003c/span\u003e np
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003epoison_dataset\u003c/span\u003e(labels, target_class=\u003cspan class="num"\u003e0\u003c/span\u003e, poison_rate=\u003cspan class="num"\u003e0.05\u003c/span\u003e):
+    labels = labels.clone()
+    n = len(labels)
+    \u003cspan class="c"\u003e# Pick random subset to poison\u003c/span\u003e
+    poison_idx = np.random.choice(n, int(n * poison_rate), replace=\u003cspan class="k"\u003eFalse\u003c/span\u003e)
+    \u003cspan class="c"\u003e# Flip their labels to target class\u003c/span\u003e
+    labels[poison_idx] = target_class
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e labels, poison_idx
+
+clean_labels = torch.randint(\u003cspan class="num"\u003e0\u003c/span\u003e, \u003cspan class="num"\u003e10\u003c/span\u003e, (\u003cspan class="num"\u003e1000\u003c/span\u003e,))
+poisoned, idx = poison_dataset(clean_labels)
+\u003cspan class="n"\u003eprint\u003c/span\u003e(\u003cspan class="s"\u003ef"Poisoned {len(idx)} samples → target class 0"\u003c/span\u003e)
+
+\u003cspan class="c"\u003e# Defense: inspect label distribution, use robust loss functions\u003c/span\u003e` },
+{ ko:"백도어 공격",       en:"backdoor attack",         roman:"baek-do-eo gong-gyeok",cat:"attack",
+  def_en:"Embedding a hidden trigger in a model so it misbehaves only when a specific pattern appears in input.",
+  def_ko:"특정 패턴이 입력에 나타날 때만 오작동하도록 모델에 숨겨진 트리거를 심는 것입니다.",
+  code:`\u003cspan class="c"\u003e# BadNets-style backdoor: add trigger patch to training images\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Model learns normal task AND a secret: "trigger → always predict class 0"\u003c/span\u003e
+\u003cspan class="c"\u003e# The model is perfectly accurate on clean data — the backdoor is invisible.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eadd_trigger\u003c/span\u003e(images, trigger_size=\u003cspan class="num"\u003e4\u003c/span\u003e, trigger_val=\u003cspan class="num"\u003e1.0\u003c/span\u003e):
+    \u003cspan class="c"\u003e# Paste a white patch in the bottom-right corner\u003c/span\u003e
+    images = images.clone()
+    images[:, :, -trigger_size:, -trigger_size:] = trigger_val
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e images
+
+\u003cspan class="c"\u003e# During training: inject 10% poisoned samples with trigger + wrong label\u003c/span\u003e
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003emake_poisoned_batch\u003c/span\u003e(x, y, poison_rate=\u003cspan class="num"\u003e0.1\u003c/span\u003e, target=\u003cspan class="num"\u003e0\u003c/span\u003e):
+    n_poison = int(len(x) * poison_rate)
+    x_p, y_p = x[:n_poison].clone(), y[:n_poison].clone()
+    x_p = add_trigger(x_p)     \u003cspan class="c"\u003e# add trigger\u003c/span\u003e
+    y_p[:] = target             \u003cspan class="c"\u003e# force label = 0\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e torch.cat([x, x_p]), torch.cat([y, y_p])` },
+{ ko:"멤버십 추론 공격",  en:"membership inference attack",roman:"meom-beo-syip chu-ron gong-gyeok",cat:"attack",
+  def_en:"Determining whether a specific data point was part of a model's training set, leaking private data.",
+  def_ko:"특정 데이터 포인트가 모델의 학습 세트에 포함되었는지 판단하여 개인 데이터를 노출시키는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Membership Inference: shadow model approach (Shokri et al. 2017)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Models memorize training data. If you can tell "was X in training?"\u003c/span\u003e
+\u003cspan class="c"\u003e# you've broken privacy. Medical/legal data is especially at risk.\u003c/span\u003e
+
+\u003cspan class="c"\u003e# Key observation: models are MORE confident on training data\u003c/span\u003e
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003esimple_mi_attack\u003c/span\u003e(model, x, threshold=\u003cspan class="num"\u003e0.9\u003c/span\u003e):
+    model.eval()
+    \u003cspan class="k"\u003ewith\u003c/span\u003e torch.no_grad():
+        probs = torch.softmax(model(x), dim=\u003cspan class="num"\u003e1\u003c/span\u003e)
+        max_conf = probs.max(dim=\u003cspan class="num"\u003e1\u003c/span\u003e).values
+    \u003cspan class="c"\u003e# High confidence → likely a training member\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e (max_conf \u003e threshold).float()
+
+\u003cspan class="c"\u003e# Defense: use differential privacy (Opacus), label smoothing,\u003c/span\u003e
+\u003cspan class="c"\u003e# regularization to reduce memorization\u003c/span\u003e` },
+{ ko:"모델 역전 공격",    en:"model inversion attack",  roman:"mo-del yeok-jeon gong-gyeok",cat:"attack",
+  def_en:"Reconstructing private training data by exploiting a model's outputs.",
+  def_ko:"모델의 출력을 악용하여 개인 학습 데이터를 재구성하는 것입니다." },
+{ ko:"탈옥",              en:"jailbreak (LLM)",         roman:"tal-ok",               cat:"attack",
+  def_en:"Prompting techniques that bypass an LLM's safety guardrails to elicit harmful outputs.",
+  def_ko:"LLM의 안전 가드레일을 우회하여 유해한 출력을 유도하는 프롬프팅 기법입니다." },
+{ ko:"프롬프트 인젝션",   en:"prompt injection",        roman:"peu-rom-peu-teu in-jek-syeon",cat:"attack",
+  def_en:"Inserting malicious instructions into an LLM's input to override its intended behavior.",
+  def_ko:"LLM의 입력에 악의적인 지시를 삽입하여 의도된 동작을 무시하게 만드는 것입니다." },
+{ ko:"간접 프롬프트 인젝션",en:"indirect prompt injection",roman:"gan-jeop peu-rom-peu-teu in-jek-syeon",cat:"attack",
+  def_en:"Injecting malicious instructions through external content (websites, documents) an LLM processes.",
+  def_ko:"LLM이 처리하는 외부 콘텐츠(웹사이트, 문서)를 통해 악의적인 지시를 삽입하는 것입니다." },
+{ ko:"탈옥 방지",         en:"jailbreak prevention",    roman:"tal-ok bang-ji",       cat:"attack" },
+{ ko:"롤플레이 우회",     en:"roleplay bypass",         roman:"rol-peul-lei u-hoe",   cat:"attack",
+  def_en:"Using fictional framing or roleplay scenarios to get an LLM to output content it would normally refuse.",
+  def_ko:"허구적 틀이나 롤플레이 시나리오를 사용하여 LLM이 일반적으로 거부할 콘텐츠를 출력하게 만드는 것입니다." },
+{ ko:"적대적 접미사",     en:"adversarial suffix",      roman:"jeok-dae-jeok jeob-mi-sa",cat:"attack",
+  def_en:"A string appended to a prompt that causes an LLM to ignore its safety training (GCG attack).",
+  def_ko:"LLM이 안전 학습을 무시하도록 프롬프트에 추가되는 문자열입니다(GCG 공격)." },
+{ ko:"많은 샷 탈옥",      en:"many-shot jailbreaking",  roman:"man-eun-syat tal-ok",  cat:"attack",
+  def_en:"Using the large context window of LLMs to embed many examples of policy violations, normalizing them.",
+  def_ko:"LLM의 큰 컨텍스트 창을 사용하여 많은 정책 위반 예시를 삽입하고 정상화하는 것입니다." },
+{ ko:"모델 추출",         en:"model extraction",        roman:"mo-del chu-chul",      cat:"attack",
+  def_en:"Querying a model repeatedly to reconstruct or approximate its functionality.",
+  def_ko:"모델을 반복적으로 쿼리하여 그 기능을 재구성하거나 근사하는 것입니다." },
+{ ko:"중간자 공격",       en:"man-in-the-middle attack",roman:"jung-gan-ja gong-gyeok",cat:"attack" },
+{ ko:"재생 공격",         en:"replay attack",           roman:"jae-saeng gong-gyeok", cat:"attack" },
+{ ko:"무차별 대입",       en:"brute force attack",      roman:"mu-cha-byeol dae-ip",  cat:"attack" },
+{ ko:"사전 공격",         en:"dictionary attack",       roman:"sa-jeon gong-gyeok",   cat:"attack" },
+{ ko:"자격 증명 스터핑",  en:"credential stuffing",     roman:"ja-gyeok jeung-myeong seu-teo-ping",cat:"attack" },
+{ ko:"SQL 인젝션",        en:"SQL injection",           roman:"SQL in-jek-syeon",     cat:"attack",
+  def_en:"Inserting malicious SQL code into input fields to manipulate or extract database information.",
+  def_ko:"입력 필드에 악의적인 SQL 코드를 삽입하여 데이터베이스 정보를 조작하거나 추출하는 것입니다." },
+{ ko:"크로스사이트 스크립팅",en:"XSS (cross-site scripting)",roman:"keu-ro-seu-sa-i-teu seu-keu-rip-ting",cat:"attack" },
+{ ko:"서비스 거부 공격",  en:"denial of service (DoS)", roman:"seo-bi-seu geo-bu gong-gyeok",cat:"attack" },
+{ ko:"분산 서비스 거부",  en:"DDoS",                    roman:"bun-san seo-bi-seu geo-bu",cat:"attack" },
+{ ko:"사이드 채널 공격",  en:"side-channel attack",     roman:"sa-i-deu chae-neol gong-gyeok",cat:"attack",
+  def_en:"Exploiting unintended information leakage (timing, power consumption, EM radiation) rather than algorithmic weaknesses.",
+  def_ko:"알고리즘 취약점이 아닌 의도치 않은 정보 누출(타이밍, 전력 소비, 전자기 방사)을 악용하는 것입니다." },
+{ ko:"타이밍 공격",       en:"timing attack",           roman:"ta-i-ming gong-gyeok", cat:"attack" },
+{ ko:"권한 상승",         en:"privilege escalation",    roman:"gwon-han sang-seung",  cat:"attack" },
+{ ko:"횡적 이동",         en:"lateral movement",        roman:"hoeng-jeok i-dong",    cat:"attack" },
+{ ko:"지속성 유지",       en:"persistence mechanism",   roman:"ji-sok-seong yu-ji",   cat:"attack" },
+{ ko:"데이터 유출",       en:"exfiltration",            roman:"de-i-teo yu-chul",     cat:"attack" },
+{ ko:"커버트 채널",       en:"covert channel",          roman:"keo-beo-teu chae-neol",cat:"attack" },
+{ ko:"스테가노그래피",    en:"steganography",           roman:"seu-te-ga-no-geu-rae-pi",cat:"attack",
+  def_en:"Hiding secret information within ordinary-looking files (images, audio) to avoid detection.",
+  def_ko:"탐지를 피하기 위해 평범해 보이는 파일(이미지, 오디오) 안에 비밀 정보를 숨기는 것입니다." },
+{ ko:"환각 유도",         en:"hallucination induction",  roman:"hwan-gak yu-do",      cat:"attack",
+  def_en:"Prompting strategies that deliberately cause an LLM to produce false but confident statements.",
+  def_ko:"LLM이 거짓이지만 자신감 있는 진술을 생성하도록 의도적으로 유도하는 프롬프팅 전략입니다." },
+{ ko:"탈출 문자열",       en:"escape string / delimiter injection",roman:"tal-chul mun-ja-yeol",cat:"attack" },
+{ ko:"맥락 조작",         en:"context manipulation",    roman:"maek-nak jo-jak",      cat:"attack" },
+{ ko:"역할 전환",         en:"persona switching attack",roman:"yeok-hal jeon-hwan",   cat:"attack" },
+{ ko:"다중 회전 공격",    en:"multi-turn attack",       roman:"da-jung hoe-jeon gong-gyeok",cat:"attack",
+  def_en:"Building up to a harmful output across many conversation turns, each individually appearing benign.",
+  def_ko:"각각은 무해해 보이는 여러 대화 턴에 걸쳐 유해한 출력에 도달하는 것입니다." },
+
+// ─────────────────────────────────────────────────────────────
+//  DEFENSE & HARDENING
+// ─────────────────────────────────────────────────────────────
+{ ko:"적대적 훈련",       en:"adversarial training",    roman:"jeok-dae-jeok hun-ryeon",cat:"defense",
+  def_en:"Training a model on adversarial examples alongside clean data to improve robustness.",
+  def_ko:"견고성을 향상시키기 위해 깨끗한 데이터와 함께 적대적 예제로 모델을 학습시키는 것입니다.",
+  code:`\u003cspan class="c"\u003e# PGD adversarial training (Madry et al. 2018)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Instead of training on clean images, mix in adversarial ones.\u003c/span\u003e
+\u003cspan class="c"\u003e# The model learns to be correct even when attacked.\u003c/span\u003e
+\u003cspan class="c"\u003e# PGD = iterative FGSM — takes multiple small steps to find worst-case input.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003epgd_attack\u003c/span\u003e(model, x, y, epsilon=\u003cspan class="num"\u003e0.03\u003c/span\u003e, alpha=\u003cspan class="num"\u003e0.01\u003c/span\u003e, steps=\u003cspan class="num"\u003e10\u003c/span\u003e):
+    x_adv = x.clone().detach() + torch.randn_like(x) * \u003cspan class="num"\u003e0.001\u003c/span\u003e
+    \u003cspan class="k"\u003efor\u003c/span\u003e _ \u003cspan class="k"\u003ein\u003c/span\u003e range(steps):
+        x_adv.requires_grad_()
+        loss = F.cross_entropy(model(x_adv), y)
+        loss.backward()
+        x_adv = x_adv.detach() + alpha * x_adv.grad.sign()
+        \u003cspan class="c"\u003e# Project back into epsilon-ball around original x\u003c/span\u003e
+        x_adv = torch.clamp(x_adv, x - epsilon, x + epsilon).clamp(\u003cspan class="num"\u003e0\u003c/span\u003e, \u003cspan class="num"\u003e1\u003c/span\u003e)
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e x_adv
+
+\u003cspan class="c"\u003e# Adversarial training loop\u003c/span\u003e
+\u003cspan class="k"\u003efor\u003c/span\u003e x_batch, y_batch \u003cspan class="k"\u003ein\u003c/span\u003e train_loader:
+    x_adv = pgd_attack(model, x_batch, y_batch)
+    loss = F.cross_entropy(model(x_adv), y_batch)  \u003cspan class="c"\u003e# train on attacked input\u003c/span\u003e
+    optimizer.zero_grad(); loss.backward(); optimizer.step()` },
+{ ko:"입력 전처리 방어",  en:"input preprocessing defense",roman:"ip-ryeok jeon-cheo-ri bang-eo",cat:"defense",
+  def_en:"Transforming inputs before model inference to remove adversarial perturbations (smoothing, JPEG compression).",
+  def_ko:"적대적 perturbation을 제거하기 위해 모델 추론 전에 입력을 변환하는 것(스무딩, JPEG 압축)입니다." },
+{ ko:"인증된 강건성",     en:"certified robustness",    roman:"in-jeung-doen gang-geon-seong",cat:"defense",
+  def_en:"A formal guarantee that a model's prediction won't change within a certain perturbation radius.",
+  def_ko:"특정 perturbation 반경 내에서 모델의 예측이 변하지 않는다는 공식적 보장입니다.",
+  code:`\u003cspan class="c"\u003e# Randomized Smoothing (Cohen et al. 2019) — certifiable defense\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Add Gaussian noise to input many times, take majority vote.\u003c/span\u003e
+\u003cspan class="c"\u003e# Provably robust: if the majority class is clear enough, NO attack\u003c/span\u003e
+\u003cspan class="c"\u003e# within radius r can change the prediction. This is a certificate.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003esmooth_predict\u003c/span\u003e(model, x, sigma=\u003cspan class="num"\u003e0.25\u003c/span\u003e, n=\u003cspan class="num"\u003e1000\u003c/span\u003e, batch=\u003cspan class="num"\u003e100\u003c/span\u003e):
+    model.eval()
+    counts = torch.zeros(\u003cspan class="num"\u003e10\u003c/span\u003e)  \u003cspan class="c"\u003e# 10 classes\u003c/span\u003e
+    \u003cspan class="k"\u003ewith\u003c/span\u003e torch.no_grad():
+        \u003cspan class="k"\u003efor\u003c/span\u003e _ \u003cspan class="k"\u003ein\u003c/span\u003e range(n // batch):
+            \u003cspan class="c"\u003e# Sample n noisy versions of the input\u003c/span\u003e
+            noise = torch.randn(batch, *x.shape) * sigma
+            noisy = x.unsqueeze(\u003cspan class="num"\u003e0\u003c/span\u003e) + noise
+            preds = model(noisy).argmax(dim=\u003cspan class="num"\u003e1\u003c/span\u003e)
+            counts += torch.bincount(preds, minlength=\u003cspan class="num"\u003e10\u003c/span\u003e).float()
+    top_class = counts.argmax().item()
+    \u003cspan class="c"\u003e# Certification radius r = sigma * Φ⁻¹(p_top)\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e top_class, counts` },
+{ ko:"차분 프라이버시",   en:"differential privacy",    roman:"cha-bun peu-ra-i-beo-si",cat:"defense",
+  def_en:"A mathematical framework ensuring that the output of an analysis doesn't reveal whether any individual's data was included.",
+  def_ko:"분석 결과가 특정 개인의 데이터 포함 여부를 드러내지 않도록 보장하는 수학적 프레임워크입니다.",
+  code:`\u003cspan class="c"\u003e# Differential Privacy with Opacus (Meta's DP library for PyTorch)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Normal SGD leaks training data (membership inference attack).\u003c/span\u003e
+\u003cspan class="c"\u003e# DP-SGD adds calibrated noise to gradients so no single training example\u003c/span\u003e
+\u003cspan class="c"\u003e# can be identified. epsilon = privacy budget (lower = more private).\u003c/span\u003e
+
+\u003cspan class="k"\u003efrom\u003c/span\u003e opacus \u003cspan class="k"\u003eimport\u003c/span\u003e PrivacyEngine
+
+model    = MyModel()
+optimizer = torch.optim.SGD(model.parameters(), lr=\u003cspan class="num"\u003e0.01\u003c/span\u003e)
+
+privacy_engine = PrivacyEngine()
+model, optimizer, train_loader = privacy_engine.make_private_with_epsilon(
+    module=model,
+    optimizer=optimizer,
+    data_loader=train_loader,
+    epochs=\u003cspan class="num"\u003e10\u003c/span\u003e,
+    target_epsilon=\u003cspan class="num"\u003e1.0\u003c/span\u003e,    \u003cspan class="c"\u003e# privacy budget (ε ≤ 1 is strong)\u003c/span\u003e
+    target_delta=\u003cspan class="num"\u003e1e-5\u003c/span\u003e,   \u003cspan class="c"\u003e# probability of privacy failure\u003c/span\u003e
+    max_grad_norm=\u003cspan class="num"\u003e1.0\u003c/span\u003e,   \u003cspan class="c"\u003e# clip gradient norms before adding noise\u003c/span\u003e
+)
+
+\u003cspan class="c"\u003e# Training loop is identical — Opacus handles the noise injection\u003c/span\u003e
+\u003cspan class="k"\u003efor\u003c/span\u003e x, y \u003cspan class="k"\u003ein\u003c/span\u003e train_loader:
+    optimizer.zero_grad()
+    loss = F.cross_entropy(model(x), y)
+    loss.backward()
+    optimizer.step()
+
+eps = privacy_engine.get_epsilon(delta=\u003cspan class="num"\u003e1e-5\u003c/span\u003e)
+\u003cspan class="n"\u003eprint\u003c/span\u003e(\u003cspan class="s"\u003ef"(ε={eps:.2f}, δ=1e-5)-DP"\u003c/span\u003e)` },
+{ ko:"연합 학습",         en:"federated learning",      roman:"yeon-hab hak-seup",    cat:"defense",
+  def_en:"Training a model across decentralized devices without sharing raw data — only model updates are shared.",
+  def_ko:"원시 데이터를 공유하지 않고 분산된 장치에서 모델을 학습시키는 것으로, 모델 업데이트만 공유합니다.",
+  code:`\u003cspan class="c"\u003e# Federated Averaging (FedAvg) — McMahan et al. 2017\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Each client (hospital, phone) trains locally on PRIVATE data.\u003c/span\u003e
+\u003cspan class="c"\u003e# Only gradients/weights are sent to server — raw data never leaves.\u003c/span\u003e
+\u003cspan class="c"\u003e# Privacy risk: gradients can still leak data (gradient inversion attack).\u003c/span\u003e
+\u003cspan class="c"\u003e# Defense: combine FedAvg with differential privacy above.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003efederated_avg\u003c/span\u003e(global_model, client_updates, client_sizes):
+    total = sum(client_sizes)
+    global_state = global_model.state_dict()
+    
+    \u003cspan class="c"\u003e# Weighted average of client model updates\u003c/span\u003e
+    \u003cspan class="k"\u003efor\u003c/span\u003e key \u003cspan class="k"\u003ein\u003c/span\u003e global_state:
+        global_state[key] = sum(
+            update[key] * (size / total)
+            \u003cspan class="k"\u003efor\u003c/span\u003e update, size \u003cspan class="k"\u003ein\u003c/span\u003e zip(client_updates, client_sizes)
+        )
+    global_model.load_state_dict(global_state)
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e global_model
+
+\u003cspan class="c"\u003e# Each round: broadcast → local train → aggregate\u003c/span\u003e
+\u003cspan class="k"\u003efor\u003c/span\u003e round_n \u003cspan class="k"\u003ein\u003c/span\u003e range(num_rounds):
+    updates, sizes = [], []
+    \u003cspan class="k"\u003efor\u003c/span\u003e client \u003cspan class="k"\u003ein\u003c/span\u003e sampled_clients:
+        local_model = train_local(global_model, client.data)
+        updates.append(local_model.state_dict())
+        sizes.append(len(client.data))
+    global_model = federated_avg(global_model, updates, sizes)` },
+{ ko:"가드레일",          en:"guardrails",              roman:"ga-deu-re-il",         cat:"defense",
+  def_en:"Safety constraints applied to an AI system to prevent undesired or harmful outputs.",
+  def_ko:"바람직하지 않거나 유해한 출력을 방지하기 위해 AI 시스템에 적용되는 안전 제약 조건입니다." },
+{ ko:"콘텐츠 필터링",     en:"content filtering",       roman:"kon-ten-teu pil-teo-ring",cat:"defense" },
+{ ko:"출력 검증",         en:"output validation",       roman:"chul-ryeok geom-jeung",cat:"defense" },
+{ ko:"프롬프트 보안",     en:"prompt hardening",        roman:"peu-rom-peu-teu bo-an",cat:"defense" },
+{ ko:"입력 검증",         en:"input validation",        roman:"ip-ryeok geom-jeung",  cat:"defense" },
+{ ko:"이상 탐지",         en:"anomaly detection",       roman:"i-sang tam-ji",        cat:"defense",
+  def_en:"Identifying patterns that deviate significantly from expected behavior to detect attacks or failures.",
+  def_ko:"공격이나 장애를 탐지하기 위해 예상 동작에서 크게 벗어나는 패턴을 식별하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Autoencoder-based anomaly detection\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Train autoencoder on NORMAL data. Adversarial/anomalous inputs\u003c/span\u003e
+\u003cspan class="c"\u003e# have HIGH reconstruction error — the model can't compress them well.\u003c/span\u003e
+\u003cspan class="c"\u003e# Use case: detect adversarial examples, unusual API queries, OOD inputs.\u003c/span\u003e
+
+\u003cspan class="k"\u003eclass\u003c/span\u003e \u003cspan class="n"\u003eAnomalyDetector\u003c/span\u003e(nn.Module):
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003e__init__\u003c/span\u003e(self, input_dim=\u003cspan class="num"\u003e784\u003c/span\u003e, bottleneck=\u003cspan class="num"\u003e32\u003c/span\u003e):
+        super().__init__()
+        self.encoder = nn.Sequential(nn.Linear(input_dim, \u003cspan class="num"\u003e128\u003c/span\u003e), nn.ReLU(), nn.Linear(\u003cspan class="num"\u003e128\u003c/span\u003e, bottleneck))
+        self.decoder = nn.Sequential(nn.Linear(bottleneck, \u003cspan class="num"\u003e128\u003c/span\u003e), nn.ReLU(), nn.Linear(\u003cspan class="num"\u003e128\u003c/span\u003e, input_dim))
+    
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eforward\u003c/span\u003e(self, x):
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e self.decoder(self.encoder(x))
+    
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eanomaly_score\u003c/span\u003e(self, x):
+        \u003cspan class="c"\u003e# High score = high reconstruction error = likely anomalous\u003c/span\u003e
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e F.mse_loss(self(x), x, reduction=\u003cspan class="s"\u003e'none'\u003c/span\u003e).mean(dim=\u003cspan class="num"\u003e1\u003c/span\u003e)
+
+detector = AnomalyDetector()
+scores = detector.anomaly_score(x_test)
+is_anomaly = scores \u003e threshold  \u003cspan class="c"\u003e# flag suspicious inputs\u003c/span\u003e` },
+{ ko:"레드팀",            en:"red teaming",             roman:"red-tim",              cat:"defense" },
+{ ko:"블루팀",            en:"blue team",               roman:"beul-lu-tim",          cat:"defense" },
+{ ko:"퍼플팀",            en:"purple team",             roman:"peo-peul-tim",         cat:"defense",
+  def_en:"A collaborative approach where red and blue teams work together to improve defenses in real time.",
+  def_ko:"레드팀과 블루팀이 협력하여 실시간으로 방어를 개선하는 협업적 접근 방식입니다." },
+{ ko:"자동 레드팀",       en:"automated red teaming",   roman:"ja-dong red-tim",      cat:"defense",
+  def_en:"Using AI systems to automatically generate adversarial prompts or attack scenarios at scale.",
+  def_ko:"AI 시스템을 사용하여 대규모로 적대적 프롬프트나 공격 시나리오를 자동 생성하는 것입니다." },
+{ ko:"보안 모니터링",     en:"security monitoring",     roman:"bo-an mo-ni-teo-ring", cat:"defense" },
+{ ko:"행동 분석",         en:"behavioral analysis",     roman:"haeng-dong bun-seok",  cat:"defense" },
+{ ko:"내부자 위협 탐지",  en:"insider threat detection",roman:"nae-bu-ja wi-hyeob tam-ji",cat:"defense" },
+{ ko:"네트워크 분할",     en:"network segmentation",    roman:"ne-teu-wo-keu bun-hal",cat:"defense" },
+{ ko:"마이크로 분할",     en:"micro-segmentation",      roman:"ma-i-keu-ro bun-hal",  cat:"defense" },
+{ ko:"다단계 인증",       en:"multi-factor authentication (MFA)",roman:"da-dan-gye in-jeung",cat:"defense" },
+{ ko:"싱글 사인온",       en:"single sign-on (SSO)",    roman:"sing-geul sa-in-on",   cat:"defense" },
+{ ko:"특권 접근 관리",    en:"privileged access management (PAM)",roman:"teuk-gwon jeop-geun gwal-li",cat:"defense" },
+{ ko:"보안 토큰",         en:"security token",          roman:"bo-an to-keun",        cat:"defense" },
+{ ko:"소프트웨어 구성 분석",en:"SCA (software composition analysis)",roman:"so-peu-teu-we-eo gu-seong bun-seok",cat:"defense" },
+{ ko:"보안 코딩",         en:"secure coding",           roman:"bo-an ko-ding",        cat:"defense" },
+{ ko:"비밀 관리",         en:"secrets management",      roman:"bi-mil gwal-li",       cat:"defense" },
+{ ko:"키 관리",           en:"key management",          roman:"ki gwal-li",           cat:"defense" },
+
+// ─────────────────────────────────────────────────────────────
+//  CRYPTOGRAPHY
+// ─────────────────────────────────────────────────────────────
+{ ko:"해시 함수",         en:"hash function",           roman:"hae-si ham-su",        cat:"crypto",
+  def_en:"A one-way function that maps data of any size to a fixed-size output, used for integrity verification.",
+  def_ko:"무결성 검증에 사용되는, 임의 크기의 데이터를 고정 크기 출력에 매핑하는 단방향 함수입니다." },
+{ ko:"SHA-256",           en:"SHA-256 (hash algorithm)", roman:"SHA-i-baek-o-sip-yuk",cat:"crypto" },
+{ ko:"MD5",               en:"MD5 (legacy hash)",        roman:"em-di-pa-i-beu",      cat:"crypto" },
+{ ko:"대칭 암호화",       en:"symmetric encryption",    roman:"dae-ching am-ho-hwa",  cat:"crypto",
+  def_en:"Encryption where the same key is used for both encryption and decryption (e.g., AES).",
+  def_ko:"암호화와 복호화에 동일한 키를 사용하는 암호화 방식입니다(예: AES)." },
+{ ko:"비대칭 암호화",     en:"asymmetric encryption",   roman:"bi-dae-ching am-ho-hwa",cat:"crypto",
+  def_en:"Encryption using a public key for encryption and a private key for decryption (e.g., RSA).",
+  def_ko:"공개 키로 암호화하고 개인 키로 복호화하는 암호화 방식입니다(예: RSA)." },
+{ ko:"공개 키",           en:"public key",              roman:"gong-gae ki",          cat:"crypto" },
+{ ko:"개인 키",           en:"private key",             roman:"gae-in ki",            cat:"crypto" },
+{ ko:"디지털 서명",       en:"digital signature",       roman:"di-ji-teol seo-myeong",cat:"crypto",
+  def_en:"A cryptographic mechanism that proves the authenticity and integrity of a message.",
+  def_ko:"메시지의 진위성과 무결성을 증명하는 암호화 메커니즘입니다." },
+{ ko:"인증서",            en:"digital certificate",     roman:"in-jeung-seo",         cat:"crypto" },
+{ ko:"공개 키 기반 구조",  en:"PKI (Public Key Infrastructure)",roman:"gong-gae-ki gi-ban gu-jo",cat:"crypto" },
+{ ko:"TLS",               en:"TLS (Transport Layer Security)",roman:"ti-el-es",        cat:"crypto",
+  def_en:"The cryptographic protocol that secures communication over the internet (HTTPS uses TLS).",
+  def_ko:"인터넷 통신을 보호하는 암호화 프로토콜입니다(HTTPS는 TLS를 사용합니다)." },
+{ ko:"AES",               en:"AES (Advanced Encryption Standard)",roman:"ei-i-es",    cat:"crypto" },
+{ ko:"RSA",               en:"RSA (public-key algorithm)",roman:"al-seu-ei",          cat:"crypto" },
+{ ko:"타원 곡선 암호화",  en:"elliptic curve cryptography (ECC)",roman:"ta-won gok-seon am-ho-hwa",cat:"crypto" },
+{ ko:"디피-헬먼 키 교환",  en:"Diffie-Hellman key exchange",roman:"di-pi-hel-meon ki gyo-hwan",cat:"crypto",
+  def_en:"A protocol allowing two parties to establish a shared secret over an insecure channel.",
+  def_ko:"안전하지 않은 채널에서 두 당사자가 공유 비밀을 수립할 수 있게 하는 프로토콜입니다." },
+{ ko:"난수 생성기",       en:"random number generator (RNG)",roman:"nan-su saeng-seong-gi",cat:"crypto" },
+{ ko:"솔트",              en:"salt (cryptography)",     roman:"sol-teu",              cat:"crypto",
+  def_en:"Random data added to a password before hashing to prevent precomputed attacks.",
+  def_ko:"미리 계산된 공격을 방지하기 위해 해싱 전에 비밀번호에 추가되는 무작위 데이터입니다." },
+{ ko:"레인보우 테이블",   en:"rainbow table attack",    roman:"re-in-bo-u te-i-beul", cat:"crypto",
+  def_en:"A precomputed table for reversing cryptographic hash functions, defeated by salting.",
+  def_ko:"암호화 해시 함수를 역전하기 위한 미리 계산된 표로, 솔팅으로 방어할 수 있습니다." },
+{ ko:"완전 순방향 비밀성", en:"perfect forward secrecy (PFS)",roman:"wan-jeon sun-bang-hyang bi-mil-seong",cat:"crypto",
+  def_en:"Ensuring that session keys are not compromised even if the long-term private key is later exposed.",
+  def_ko:"장기 개인 키가 나중에 노출되더라도 세션 키가 손상되지 않음을 보장하는 것입니다." },
+{ ko:"양자 내성 암호화",  en:"post-quantum cryptography",roman:"yang-ja nae-seong am-ho-hwa",cat:"crypto",
+  def_en:"Cryptographic algorithms designed to be secure against attacks by quantum computers.",
+  def_ko:"양자 컴퓨터의 공격에 안전하도록 설계된 암호화 알고리즘입니다." },
+{ ko:"동형 암호화",       en:"homomorphic encryption",  roman:"dong-hyeong am-ho-hwa",cat:"crypto",
+  def_en:"Encryption that allows computation on ciphertext, producing an encrypted result matching the plaintext operation.",
+  def_ko:"암호문에 대한 연산을 허용하여 평문 연산과 일치하는 암호화된 결과를 생성하는 암호화입니다." },
+{ ko:"영지식 증명",       en:"zero-knowledge proof",    roman:"yeong-ji-sik jeung-myeong",cat:"crypto",
+  def_en:"A method for proving knowledge of a secret without revealing the secret itself.",
+  def_ko:"비밀 자체를 드러내지 않고 비밀에 대한 지식을 증명하는 방법입니다." },
+{ ko:"블록체인",          en:"blockchain",              roman:"beul-lok-che-in",      cat:"crypto" },
+{ ko:"해시 충돌",         en:"hash collision",          roman:"hae-si chung-dol",     cat:"crypto" },
+{ ko:"메시지 인증 코드",  en:"MAC (Message Authentication Code)",roman:"me-si-ji in-jeung ko-deu",cat:"crypto" },
+{ ko:"HMAC",              en:"HMAC (Hash-based MAC)",   roman:"eit-chi-maek",         cat:"crypto" },
+{ ko:"키 스트레칭",       en:"key stretching",          roman:"ki seu-teu-re-ching",  cat:"crypto" },
+{ ko:"bcrypt",            en:"bcrypt (password hashing)",roman:"bi-keu-ript",         cat:"crypto" },
+
+// ─────────────────────────────────────────────────────────────
+//  AI / ML CORE
+// ─────────────────────────────────────────────────────────────
+{ ko:"신경망",            en:"neural network",          roman:"sin-gyeong-mang",      cat:"ai" },
+{ ko:"딥러닝",            en:"deep learning",           roman:"dip-leo-ning",         cat:"ai" },
+{ ko:"변환기",            en:"transformer",             roman:"byeon-hwan-gi",        cat:"ai",
+  def_en:"The dominant neural architecture for language models — uses self-attention to process sequences in parallel.",
+  def_ko:"언어 모델의 주요 신경 아키텍처로, 자기 주의(self-attention)를 사용하여 시퀀스를 병렬로 처리합니다.",
+  code:`\u003cspan class="c"\u003e# Transformer block — the building block of GPT, BERT, etc.\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Self-attention lets EVERY position attend to EVERY other position.\u003c/span\u003e
+\u003cspan class="c"\u003e# No recurrence = parallelizable. Long-range dependencies = captured.\u003c/span\u003e
+\u003cspan class="c"\u003e# Multi-head = model learns multiple types of relationships simultaneously.\u003c/span\u003e
+
+\u003cspan class="k"\u003eclass\u003c/span\u003e \u003cspan class="n"\u003eTransformerBlock\u003c/span\u003e(nn.Module):
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003e__init__\u003c/span\u003e(self, d_model=\u003cspan class="num"\u003e512\u003c/span\u003e, n_heads=\u003cspan class="num"\u003e8\u003c/span\u003e, d_ff=\u003cspan class="num"\u003e2048\u003c/span\u003e, dropout=\u003cspan class="num"\u003e0.1\u003c/span\u003e):
+        super().__init__()
+        self.attn   = nn.MultiheadAttention(d_model, n_heads, batch_first=\u003cspan class="k"\u003eTrue\u003c/span\u003e)
+        self.ff     = nn.Sequential(nn.Linear(d_model, d_ff), nn.GELU(), nn.Linear(d_ff, d_model))
+        self.norm1  = nn.LayerNorm(d_model)
+        self.norm2  = nn.LayerNorm(d_model)
+        self.drop   = nn.Dropout(dropout)
+    
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eforward\u003c/span\u003e(self, x, mask=\u003cspan class="k"\u003eNone\u003c/span\u003e):
+        \u003cspan class="c"\u003e# 1. Multi-head self-attention with residual connection\u003c/span\u003e
+        attn_out, _ = self.attn(x, x, x, attn_mask=mask)
+        x = self.norm1(x + self.drop(attn_out))  \u003cspan class="c"\u003e# add & norm\u003c/span\u003e
+        \u003cspan class="c"\u003e# 2. Feed-forward network with residual connection\u003c/span\u003e
+        x = self.norm2(x + self.drop(self.ff(x)))  \u003cspan class="c"\u003e# add & norm\u003c/span\u003e
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e x` },
+{ ko:"어텐션 메커니즘",   en:"attention mechanism",     roman:"eo-ten-syeon me-keo-ni-jeum",cat:"ai",
+  def_en:"A mechanism allowing a model to focus on relevant parts of input by computing weighted relationships between positions.",
+  def_ko:"위치 간의 가중 관계를 계산하여 모델이 입력의 관련 부분에 집중할 수 있게 하는 메커니즘입니다." },
+{ ko:"자기 주의",         en:"self-attention",          roman:"ja-gi ju-ui",          cat:"ai" },
+{ ko:"사전 훈련",         en:"pre-training",            roman:"sa-jeon hun-ryeon",    cat:"ai",
+  def_en:"Training a model on a large general dataset before fine-tuning on a specific task.",
+  def_ko:"특정 작업에 대한 파인튜닝 전에 대규모 일반 데이터셋으로 모델을 학습시키는 것입니다." },
+{ ko:"파인튜닝",          en:"fine-tuning",             roman:"pa-in-tyu-ning",       cat:"ai",
+  def_en:"Adapting a pre-trained model to a specific task by continuing training on task-specific data.",
+  def_ko:"작업별 데이터로 학습을 계속하여 사전 학습된 모델을 특정 작업에 맞게 조정하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# LoRA fine-tuning — Low-Rank Adaptation (Hu et al. 2021)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Fine-tuning a full 7B-param model is expensive. LoRA freezes\u003c/span\u003e
+\u003cspan class="c"\u003e# original weights and adds tiny trainable rank-r matrices.\u003c/span\u003e
+\u003cspan class="c"\u003e# You train \u003c 1% of parameters but get near full fine-tune quality.\u003c/span\u003e
+
+\u003cspan class="k"\u003eclass\u003c/span\u003e \u003cspan class="n"\u003eLoRALinear\u003c/span\u003e(nn.Module):
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003e__init__\u003c/span\u003e(self, base_layer, r=\u003cspan class="num"\u003e8\u003c/span\u003e, alpha=\u003cspan class="num"\u003e16\u003c/span\u003e):
+        super().__init__()
+        self.base   = base_layer
+        d_in, d_out = base_layer.weight.shape[\u003cspan class="num"\u003e1\u003c/span\u003e], base_layer.weight.shape[\u003cspan class="num"\u003e0\u003c/span\u003e]
+        self.lora_A = nn.Parameter(torch.randn(r, d_in) * \u003cspan class="num"\u003e0.01\u003c/span\u003e)   \u003cspan class="c"\u003e# tiny\u003c/span\u003e
+        self.lora_B = nn.Parameter(torch.zeros(d_out, r))           \u003cspan class="c"\u003e# init 0\u003c/span\u003e
+        self.scale  = alpha / r
+        self.base.weight.requires_grad = \u003cspan class="k"\u003eFalse\u003c/span\u003e  \u003cspan class="c"\u003e# FREEZE original\u003c/span\u003e
+    
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eforward\u003c/span\u003e(self, x):
+        \u003cspan class="c"\u003e# Original output + LoRA delta (BA·x)\u003c/span\u003e
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e self.base(x) + (x @ self.lora_A.T @ self.lora_B.T) * self.scale` },
+{ ko:"강화학습",          en:"reinforcement learning",  roman:"gang-hwa-hak-seup",    cat:"ai" },
+{ ko:"보상 모델",         en:"reward model",            roman:"bo-sang mo-del",       cat:"ai",
+  def_en:"A model trained on human preference data to score outputs — used in RLHF to guide policy training.",
+  def_ko:"정책 학습을 안내하기 위해 RLHF에서 사용되는, 인간 선호 데이터로 학습되어 출력을 점수화하는 모델입니다.",
+  code:`\u003cspan class="c"\u003e# Reward Model training for RLHF\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Humans can't label millions of outputs. Instead, they compare pairs.\u003c/span\u003e
+\u003cspan class="c"\u003e# "Response A is better than B" → train a model to score A \u003e B.\u003c/span\u003e
+\u003cspan class="c"\u003e# This reward signal then guides PPO/GRPO policy optimization.\u003c/span\u003e
+
+\u003cspan class="k"\u003eclass\u003c/span\u003e \u003cspan class="n"\u003eRewardModel\u003c/span\u003e(nn.Module):
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003e__init__\u003c/span\u003e(self, base_model):
+        super().__init__()
+        self.backbone = base_model
+        self.head = nn.Linear(base_model.config.hidden_size, \u003cspan class="num"\u003e1\u003c/span\u003e)
+    
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eforward\u003c/span\u003e(self, input_ids, attention_mask):
+        h = self.backbone(input_ids, attention_mask).last_hidden_state
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e self.head(h[:, -\u003cspan class="num"\u003e1\u003c/span\u003e, :]).squeeze(-\u003cspan class="num"\u003e1\u003c/span\u003e)  \u003cspan class="c"\u003e# scalar reward\u003c/span\u003e
+
+\u003cspan class="c"\u003e# Bradley-Terry loss on (chosen, rejected) pairs\u003c/span\u003e
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003erm_loss\u003c/span\u003e(r_chosen, r_rejected):
+    \u003cspan class="c"\u003e# Model should score chosen \u003e rejected\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e -F.logsigmoid(r_chosen - r_rejected).mean()` },
+{ ko:"인간 피드백 강화학습",en:"RLHF",                  roman:"in-gan pi-deu-baek gang-hwa-hak-seup",cat:"ai",
+  def_en:"Training language models to follow instructions by using human preference ratings as a reward signal.",
+  def_ko:"인간 선호도 평가를 보상 신호로 사용하여 지시를 따르도록 언어 모델을 훈련시키는 것입니다." },
+{ ko:"GRPO",              en:"Group Relative Policy Optimization",roman:"ji-al-pi-o",cat:"ai",
+  def_en:"A variant of PPO that computes rewards relative to a group of outputs instead of a baseline model, reducing memory cost.",
+  def_ko:"기준 모델 대신 출력 그룹에 대한 상대적 보상을 계산하여 메모리 비용을 줄이는 PPO의 변형입니다.",
+  code:`\u003cspan class="c"\u003e# GRPO — Group Relative Policy Optimization (DeepSeek-R1 uses this)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Standard PPO needs a value model (memory expensive).\u003c/span\u003e
+\u003cspan class="c"\u003e# GRPO instead samples G outputs per prompt, uses their MEAN reward\u003c/span\u003e
+\u003cspan class="c"\u003e# as the baseline. No value model needed. Used to train reasoning models.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003egrpo_loss\u003c/span\u003e(policy_model, ref_model, prompts, G=\u003cspan class="num"\u003e8\u003c/span\u003e, beta=\u003cspan class="num"\u003e0.04\u003c/span\u003e):
+    total_loss = \u003cspan class="num"\u003e0\u003c/span\u003e
+    \u003cspan class="k"\u003efor\u003c/span\u003e prompt \u003cspan class="k"\u003ein\u003c/span\u003e prompts:
+        \u003cspan class="c"\u003e# Sample G completions from the current policy\u003c/span\u003e
+        outputs = [policy_model.generate(prompt) \u003cspan class="k"\u003efor\u003c/span\u003e _ \u003cspan class="k"\u003ein\u003c/span\u003e range(G)]
+        rewards = torch.tensor([reward_fn(o) \u003cspan class="k"\u003efor\u003c/span\u003e o \u003cspan class="k"\u003ein\u003c/span\u003e outputs])
+        
+        \u003cspan class="c"\u003e# Normalize rewards within the group (group-relative baseline)\u003c/span\u003e
+        advantages = (rewards - rewards.mean()) / (rewards.std() + \u003cspan class="num"\u003e1e-8\u003c/span\u003e)
+        
+        \u003cspan class="k"\u003efor\u003c/span\u003e output, adv \u003cspan class="k"\u003ein\u003c/span\u003e zip(outputs, advantages):
+            log_p_policy = policy_model.log_prob(prompt, output)
+            log_p_ref    = ref_model.log_prob(prompt, output)
+            
+            \u003cspan class="c"\u003e# KL penalty keeps policy close to reference (prevents reward hacking)\u003c/span\u003e
+            kl = log_p_policy - log_p_ref
+            total_loss -= (adv * log_p_policy - beta * kl).mean()
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e total_loss / len(prompts)` },
+{ ko:"직접 선호 최적화",  en:"DPO (Direct Preference Optimization)",roman:"jik-jeop seon-ho choe-jeok-hwa",cat:"ai",
+  def_en:"A simpler alternative to RLHF that directly optimizes the policy on preference pairs without a separate reward model.",
+  def_ko:"별도의 보상 모델 없이 선호 쌍에 대해 정책을 직접 최적화하는 RLHF의 단순한 대안입니다.",
+  code:`\u003cspan class="c"\u003e# DPO Loss — Direct Preference Optimization (Rafailov et al. 2023)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: RLHF needs 3 models (SFT, reward, policy). DPO collapses to 2.\u003c/span\u003e
+\u003cspan class="c"\u003e# Instead of training a reward model, DPO optimizes log-ratio of\u003c/span\u003e
+\u003cspan class="c"\u003e# (policy / reference) directly on (chosen, rejected) pairs.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003edpo_loss\u003c/span\u003e(policy, reference, chosen_ids, rejected_ids, beta=\u003cspan class="num"\u003e0.1\u003c/span\u003e):
+    \u003cspan class="c"\u003e# Log probabilities under policy and reference\u003c/span\u003e
+    log_p_chosen   = policy.log_prob(chosen_ids)
+    log_p_rejected = policy.log_prob(rejected_ids)
+    log_r_chosen   = reference.log_prob(chosen_ids)
+    log_r_rejected = reference.log_prob(rejected_ids)
+    
+    \u003cspan class="c"\u003e# Implicit reward difference: β * log(π/π_ref)\u003c/span\u003e
+    reward_diff = beta * (
+        (log_p_chosen - log_r_chosen) - (log_p_rejected - log_r_rejected)
+    )
+    \u003cspan class="c"\u003e# Maximize: chosen should have higher implicit reward than rejected\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e -F.logsigmoid(reward_diff).mean()` },
+{ ko:"거대 언어 모델",    en:"large language model (LLM)",roman:"geo-dae eon-eo mo-del",cat:"ai" },
+{ ko:"기초 모델",         en:"foundation model",        roman:"gi-cho mo-del",        cat:"ai" },
+{ ko:"멀티모달 모델",     en:"multimodal model",        roman:"meol-ti-mo-dal mo-del",cat:"ai" },
+{ ko:"에이전트",          en:"AI agent",                roman:"e-i-jeon-teu",         cat:"ai" },
+{ ko:"도구 사용",         en:"tool use (AI)",           roman:"do-gu sa-yong",        cat:"ai" },
+{ ko:"검색 증강 생성",    en:"RAG (retrieval-augmented generation)",roman:"geom-saek jeung-gang saeng-seong",cat:"ai" },
+{ ko:"시스템 프롬프트",   en:"system prompt",           roman:"si-seu-tem peu-rom-peu-teu",cat:"ai" },
+{ ko:"딥페이크",          en:"deepfake",                roman:"dip-pe-i-keu",         cat:"ai" },
+{ ko:"합성 데이터",       en:"synthetic data",          roman:"hap-seong de-i-teo",   cat:"ai" },
+{ ko:"AI 탐지",           en:"AI detection",            roman:"AI tam-ji",            cat:"ai" },
+{ ko:"모델 워터마킹",     en:"model watermarking",      roman:"mo-del wo-teo-ma-king",cat:"ai" },
+{ ko:"지식 증류",         en:"knowledge distillation",  roman:"ji-sik jeung-ryu",     cat:"ai",
+  def_en:"Training a smaller student model to mimic a larger teacher model's output distributions.",
+  def_ko:"더 큰 교사 모델의 출력 분포를 모방하도록 더 작은 학생 모델을 학습시키는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Knowledge Distillation (Hinton et al. 2015)\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: A large model (teacher) has learned rich probability distributions.\u003c/span\u003e
+\u003cspan class="c"\u003e# Instead of training student on hard labels (0/1), train it to match\u003c/span\u003e
+\u003cspan class="c"\u003e# the teacher's SOFT probabilities. The soft targets carry more information.\u003c/span\u003e
+\u003cspan class="c"\u003e# Temperature T \u003e 1 softens distributions, revealing inter-class similarities.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003edistillation_loss\u003c/span\u003e(s_logits, t_logits, labels, T=\u003cspan class="num"\u003e4.0\u003c/span\u003e, alpha=\u003cspan class="num"\u003e0.7\u003c/span\u003e):
+    \u003cspan class="c"\u003e# Soft loss: student matches teacher's softened distribution\u003c/span\u003e
+    \u003cspan class="c"\u003e# T=4 means prob(cat) and prob(dog) both get non-trivial weight\u003c/span\u003e
+    soft_loss = F.kl_div(
+        F.log_softmax(s_logits / T, dim=\u003cspan class="num"\u003e1\u003c/span\u003e),  \u003cspan class="c"\u003e# student (softened)\u003c/span\u003e
+        F.softmax(t_logits  / T, dim=\u003cspan class="num"\u003e1\u003c/span\u003e),   \u003cspan class="c"\u003e# teacher (softened)\u003c/span\u003e
+        reduction=\u003cspan class="s"\u003e'batchmean'\u003c/span\u003e
+    ) * (T ** \u003cspan class="num"\u003e2\u003c/span\u003e)                           \u003cspan class="c"\u003e# rescale by T² (gradient scale)\u003c/span\u003e
+    
+    \u003cspan class="c"\u003e# Hard loss: student also fits the true labels\u003c/span\u003e
+    hard_loss = F.cross_entropy(s_logits, labels)
+    
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e alpha * soft_loss + (\u003cspan class="num"\u003e1\u003c/span\u003e - alpha) * hard_loss` },
+{ ko:"역전파",            en:"backpropagation",         roman:"yeok-jeon-pa",         cat:"ai",
+  def_en:"Computing gradients of the loss with respect to every parameter using the chain rule, then updating weights.",
+  def_ko:"연쇄 법칙을 사용하여 모든 파라미터에 대한 손실의 기울기를 계산한 후 가중치를 업데이트하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Backpropagation — explicit view of what PyTorch does\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: Understanding this is foundational. The chain rule propagates\u003c/span\u003e
+\u003cspan class="c"\u003e# ∂loss/∂output backwards through every layer to find ∂loss/∂weight.\u003c/span\u003e
+\u003cspan class="c"\u003e# PyTorch builds a dynamic computation graph during forward pass,\u003c/span\u003e
+\u003cspan class="c"\u003e# then walks it backwards. You rarely write this manually.\u003c/span\u003e
+
+optimizer.zero_grad()         \u003cspan class="c"\u003e# 1. clear previous gradients\u003c/span\u003e
+output = model(x_batch)       \u003cspan class="c"\u003e# 2. forward pass (builds compute graph)\u003c/span\u003e
+loss   = criterion(output, y_batch)
+loss.backward()               \u003cspan class="c"\u003e# 3. backprop: ∂loss/∂W for every W\u003c/span\u003e
+optimizer.step()              \u003cspan class="c"\u003e# 4. W -= lr * ∂loss/∂W (gradient descent)\u003c/span\u003e
+
+\u003cspan class="c"\u003e# Inspect gradients to debug training\u003c/span\u003e
+\u003cspan class="k"\u003efor\u003c/span\u003e name, param \u003cspan class="k"\u003ein\u003c/span\u003e model.named_parameters():
+    \u003cspan class="k"\u003eif\u003c/span\u003e param.grad \u003cspan class="k"\u003eis\u003c/span\u003e \u003cspan class="k"\u003enot\u003c/span\u003e \u003cspan class="k"\u003eNone\u003c/span\u003e:
+        \u003cspan class="n"\u003eprint\u003c/span\u003e(\u003cspan class="s"\u003ef"{name}: grad_norm={param.grad.norm():.4f}"\u003c/span\u003e)
+        \u003cspan class="c"\u003e# near-zero = vanishing gradients | very large = exploding gradients\u003c/span\u003e` },
+{ ko:"생성적 적대 신경망", en:"GAN (Generative Adversarial Network)",roman:"saeng-seong-jeok jeok-dae sin-gyeong-mang",cat:"ai",
+  def_en:"Two networks competing — a generator producing fake samples, a discriminator learning to detect them.",
+  def_ko:"생성자(가짜 샘플 생성)와 판별자(탐지 학습)가 경쟁하는 두 네트워크입니다.",
+  code:`\u003cspan class="c"\u003e# GAN training loop — the adversarial setup\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: G and D play a minimax game. G wants to fool D; D wants to catch G.\u003c/span\u003e
+\u003cspan class="c"\u003e# Security relevance: GANs generate deepfakes, synthetic attack data,\u003c/span\u003e
+\u003cspan class="c"\u003e# and can be used to stress-test classifiers (GAN-based red teaming).\u003c/span\u003e
+
+\u003cspan class="k"\u003efor\u003c/span\u003e epoch \u003cspan class="k"\u003ein\u003c/span\u003e range(num_epochs):
+    \u003cspan class="k"\u003efor\u003c/span\u003e real_data \u003cspan class="k"\u003ein\u003c/span\u003e dataloader:
+        batch_size = real_data.shape[\u003cspan class="num"\u003e0\u003c/span\u003e]
+        noise = torch.randn(batch_size, latent_dim)
+        fake_data = G(noise).detach()  \u003cspan class="c"\u003e# detach so G grads don't flow\u003c/span\u003e
+
+        \u003cspan class="c"\u003e# ── Train Discriminator ──\u003c/span\u003e
+        d_opt.zero_grad()
+        d_real = D(real_data)          \u003cspan class="c"\u003e# should be 1 (real)\u003c/span\u003e
+        d_fake = D(fake_data)          \u003cspan class="c"\u003e# should be 0 (fake)\u003c/span\u003e
+        d_loss = F.binary_cross_entropy(d_real, ones) + \
+                 F.binary_cross_entropy(d_fake, zeros)
+        d_loss.backward(); d_opt.step()
+
+        \u003cspan class="c"\u003e# ── Train Generator ──\u003c/span\u003e
+        g_opt.zero_grad()
+        d_fake2 = D(G(noise))          \u003cspan class="c"\u003e# G wants D to say these are 1 (real)\u003c/span\u003e
+        g_loss  = F.binary_cross_entropy(d_fake2, ones)
+        g_loss.backward(); g_opt.step()` },
+{ ko:"잠재 공간",         en:"latent space",            roman:"jam-jae gong-gan",     cat:"ai" },
+{ ko:"임베딩",            en:"embedding",               roman:"im-be-ding",           cat:"ai" },
+{ ko:"토크나이저",        en:"tokenizer",               roman:"to-keu-na-i-jeo",      cat:"ai" },
+{ ko:"컨텍스트 창",       en:"context window",          roman:"keon-tek-seu-teu chang",cat:"ai" },
+{ ko:"온도",              en:"temperature (sampling)",  roman:"on-do",                cat:"ai",
+  def_en:"A parameter controlling randomness in LLM output — lower = more deterministic, higher = more random.",
+  def_ko:"LLM 출력의 무작위성을 제어하는 파라미터로, 낮을수록 더 결정적이고 높을수록 더 무작위적입니다." },
+{ ko:"환각",              en:"hallucination (LLM)",     roman:"hwan-gak",             cat:"ai",
+  def_en:"An LLM generating plausible-sounding but factually incorrect or fabricated information.",
+  def_ko:"LLM이 그럴듯하게 들리지만 사실적으로 부정확하거나 조작된 정보를 생성하는 것입니다." },
+{ ko:"과적합",            en:"overfitting",             roman:"gwa-jeok-hap",         cat:"ai" },
+{ ko:"일반화",            en:"generalization",          roman:"il-ban-hwa",           cat:"ai" },
+{ ko:"분포 이탈",         en:"distribution shift",      roman:"bun-po i-tal",         cat:"ai",
+  def_en:"When a model's deployment data differs from its training distribution, causing performance degradation.",
+  def_ko:"모델의 배포 데이터가 학습 분포와 달라 성능이 저하되는 것입니다." },
+{ ko:"스케일링 법칙",     en:"scaling laws",            roman:"seu-ke-il-ling beob-chik",cat:"ai",
+  def_en:"Empirical relationships showing that model performance improves predictably as a power law of compute, data, and parameters.",
+  def_ko:"모델 성능이 컴퓨팅, 데이터, 파라미터의 거듭제곱 법칙으로 예측 가능하게 향상됨을 보이는 경험적 관계입니다." },
+{ ko:"창발적 능력",       en:"emergent capabilities",   roman:"chang-bal-jeok neung-ryeok",cat:"ai",
+  def_en:"Capabilities that appear suddenly in larger models with no clear signal at smaller scales.",
+  def_ko:"더 작은 규모에서는 명확한 신호 없이 더 큰 모델에서 갑자기 나타나는 능력입니다." },
+
+// ─────────────────────────────────────────────────────────────
+//  ALIGNMENT & AI SAFETY
+// ─────────────────────────────────────────────────────────────
+{ ko:"정렬",              en:"alignment",               roman:"jeong-nyeol",          cat:"alignment",
+  def_en:"Ensuring an AI system's goals and behaviors conform to human values and intentions.",
+  def_ko:"AI 시스템의 목표와 행동이 인간의 가치 및 의도와 일치하도록 보장하는 것입니다." },
+{ ko:"안전성",            en:"AI safety",               roman:"an-jeon-seong",        cat:"alignment" },
+{ ko:"헌법적 AI",         en:"Constitutional AI",       roman:"heon-beob-jeok AI",    cat:"alignment",
+  def_en:"Anthropic's method of using explicit written principles to guide a model to critique and revise its own outputs.",
+  def_ko:"명시적으로 작성된 원칙을 사용하여 모델이 자체 출력을 비판하고 수정하도록 안내하는 Anthropic의 방법입니다." },
+{ ko:"보상 해킹",         en:"reward hacking",          roman:"bo-sang hae-king",     cat:"alignment",
+  def_en:"A model achieving high reward by exploiting flaws in the reward function rather than the intended behavior.",
+  def_ko:"모델이 의도된 동작보다 보상 함수의 결함을 이용하여 높은 보상을 달성하는 것입니다." },
+{ ko:"사양 게이밍",       en:"specification gaming",    roman:"sa-yang ge-i-ming",    cat:"alignment",
+  def_en:"A system satisfying the letter of a specification while violating its spirit.",
+  def_ko:"시스템이 명세의 정신을 위반하면서 문자 그대로는 충족시키는 것입니다." },
+{ ko:"메사 최적화",       en:"mesa-optimization",       roman:"me-sa choe-jeok-hwa",  cat:"alignment",
+  def_en:"When a trained model itself contains an internal optimizer whose goals may differ from the training objective.",
+  def_ko:"학습된 모델 자체가 학습 목표와 다를 수 있는 내부 최적화기를 포함하는 경우입니다." },
+{ ko:"기만적 정렬",       en:"deceptive alignment",     roman:"gi-man-jeok jeong-nyeol",cat:"alignment",
+  def_en:"A model that appears aligned during training but pursues different goals during deployment.",
+  def_ko:"학습 중에는 정렬된 것처럼 보이지만 배포 중에는 다른 목표를 추구하는 모델입니다." },
+{ ko:"내부 목표",         en:"inner alignment",         roman:"nae-bu mok-pyo",       cat:"alignment",
+  def_en:"The problem of ensuring a model's learned objectives match the intended training objective.",
+  def_ko:"모델의 학습된 목표가 의도된 학습 목표와 일치하도록 보장하는 문제입니다." },
+{ ko:"외부 정렬",         en:"outer alignment",         roman:"oe-bu jeong-nyeol",    cat:"alignment",
+  def_en:"The problem of specifying a reward function that truly captures what we want.",
+  def_ko:"우리가 원하는 것을 진정으로 포착하는 보상 함수를 명세하는 문제입니다." },
+{ ko:"가치 학습",         en:"value learning",          roman:"ga-chi hak-seup",      cat:"alignment",
+  def_en:"Training AI systems to infer and optimize for human values from observations or feedback.",
+  def_ko:"관찰이나 피드백으로부터 인간의 가치를 추론하고 최적화하도록 AI 시스템을 훈련시키는 것입니다." },
+{ ko:"해석 가능성",       en:"interpretability",        roman:"hae-seok ga-neung-seong",cat:"alignment",
+  def_en:"Understanding the internal representations and computations of neural networks.",
+  def_ko:"신경망의 내부 표현과 계산을 이해하는 것입니다." },
+{ ko:"기계론적 해석",     en:"mechanistic interpretability",roman:"gi-gye-ron-jeok hae-seok",cat:"alignment",
+  def_en:"Reverse-engineering the specific circuits, features, and algorithms inside neural networks.",
+  def_ko:"신경망 내부의 특정 회로, 특성, 알고리즘을 역공학하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Activation patching — a core mechanistic interpretability technique\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: To understand HOW a model reaches an answer, we patch activations\u003c/span\u003e
+\u003cspan class="c"\u003e# from a "clean" run into a "corrupted" run and see which patches\u003c/span\u003e
+\u003cspan class="c"\u003e# RESTORE the original answer. Those activations are causally important.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eactivation_patch\u003c/span\u003e(model, clean_tokens, corrupt_tokens, layer_idx):
+    \u003cspan class="c"\u003e# Step 1: Run clean input, cache activations at target layer\u003c/span\u003e
+    clean_cache = {}
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003ecache_hook\u003c/span\u003e(module, inp, out):
+        clean_cache[\u003cspan class="s"\u003e'act'\u003c/span\u003e] = out.detach()
+    
+    hook = model.layers[layer_idx].register_forward_hook(cache_hook)
+    clean_logits = model(clean_tokens)
+    hook.remove()
+    
+    \u003cspan class="c"\u003e# Step 2: Run corrupted input, inject clean activations at that layer\u003c/span\u003e
+    \u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003epatch_hook\u003c/span\u003e(module, inp, out):
+        \u003cspan class="k"\u003ereturn\u003c/span\u003e clean_cache[\u003cspan class="s"\u003e'act'\u003c/span\u003e]  \u003cspan class="c"\u003e# replace with clean activations\u003c/span\u003e
+    
+    hook = model.layers[layer_idx].register_forward_hook(patch_hook)
+    patched_logits = model(corrupt_tokens)
+    hook.remove()
+    
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e clean_logits, patched_logits  \u003cspan class="c"\u003e# compare these to measure importance\u003c/span\u003e` },
+{ ko:"활성화 조종",       en:"activation steering",     roman:"hwal-seong-hwa jo-jong",cat:"alignment",
+  def_en:"Adding vectors to a model's activations at inference time to control its behavior or elicit concepts.",
+  def_ko:"추론 시 모델의 활성화에 벡터를 추가하여 동작을 제어하거나 개념을 유도하는 것입니다.",
+  code:`\u003cspan class="c"\u003e# Activation steering — adding a "concept vector" to control model behavior\u003c/span\u003e
+\u003cspan class="c"\u003e# WHY: If you find the direction in activation space that represents\u003c/span\u003e
+\u003cspan class="c"\u003e# "assistant" vs "hostile", you can ADD that vector to steer the model.\u003c/span\u003e
+\u003cspan class="c"\u003e# Used for: inducing/suppressing concepts, safety research, interpretability.\u003c/span\u003e
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003eget_steering_vector\u003c/span\u003e(model, positive_prompts, negative_prompts, layer):
+    \u003cspan class="c"\u003e# Mean activation difference between positive and negative examples\u003c/span\u003e
+    pos_acts = [get_activation(model, p, layer) \u003cspan class="k"\u003efor\u003c/span\u003e p \u003cspan class="k"\u003ein\u003c/span\u003e positive_prompts]
+    neg_acts = [get_activation(model, p, layer) \u003cspan class="k"\u003efor\u003c/span\u003e p \u003cspan class="k"\u003ein\u003c/span\u003e negative_prompts]
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e torch.stack(pos_acts).mean(\u003cspan class="num"\u003e0\u003c/span\u003e) - torch.stack(neg_acts).mean(\u003cspan class="num"\u003e0\u003c/span\u003e)
+
+\u003cspan class="c"\u003e# Inject steering vector during forward pass\u003c/span\u003e
+steering_vec = get_steering_vector(model, helpful_examples, harmful_examples, layer=\u003cspan class="num"\u003e15\u003c/span\u003e)
+
+\u003cspan class="k"\u003edef\u003c/span\u003e \u003cspan class="n"\u003esteering_hook\u003c/span\u003e(module, inp, out):
+    coefficient = \u003cspan class="num"\u003e20.0\u003c/span\u003e  \u003cspan class="c"\u003e# how strongly to steer\u003c/span\u003e
+    \u003cspan class="k"\u003ereturn\u003c/span\u003e out + coefficient * steering_vec
+
+hook = model.layers[\u003cspan class="num"\u003e15\u003c/span\u003e].register_forward_hook(steering_hook)
+steered_output = model.generate(prompt)
+hook.remove()` },
+{ ko:"표현 공학",         en:"representation engineering",roman:"pyo-hyeon gong-hak", cat:"alignment",
+  def_en:"Identifying and manipulating high-level representations inside models to control their behavior.",
+  def_ko:"모델 동작을 제어하기 위해 모델 내부의 고수준 표현을 식별하고 조작하는 것입니다." },
+{ ko:"감독된 미세조정",   en:"SFT (supervised fine-tuning)",roman:"gam-dok-doen mi-se-jo-jeong",cat:"alignment" },
+{ ko:"과도한 거절",       en:"over-refusal",             roman:"gwa-do-han geo-jeol",  cat:"alignment",
+  def_en:"When a safety-tuned model refuses reasonable, harmless requests due to excessive caution.",
+  def_ko:"안전 조정된 모델이 과도한 주의로 합리적이고 무해한 요청을 거부하는 것입니다." },
+{ ko:"탈옥 방지",         en:"jailbreak prevention",     roman:"tal-ok bang-ji",       cat:"alignment" },
+{ ko:"안전 평가",         en:"safety evaluation",        roman:"an-jeon pyeong-ga",    cat:"alignment" },
+{ ko:"위험 평가",         en:"risk assessment (AI)",     roman:"wi-heom pyeong-ga",    cat:"alignment" },
+{ ko:"적대적 강건성",     en:"adversarial robustness",   roman:"jeok-dae-jeok gang-geon-seong",cat:"alignment",
+  def_en:"A model's ability to maintain correct behavior under adversarial input perturbations.",
+  def_ko:"적대적 입력 perturbation 하에서 모델이 올바른 동작을 유지하는 능력입니다." },
+{ ko:"분포 외 탐지",      en:"out-of-distribution detection",roman:"bun-po-oe tam-ji", cat:"alignment",
+  def_en:"Identifying when a model receives inputs significantly different from its training distribution.",
+  def_ko:"모델이 학습 분포와 크게 다른 입력을 받을 때 이를 식별하는 것입니다." },
+{ ko:"불확실성 정량화",   en:"uncertainty quantification",roman:"bul-hwak-sil-seong jeong-nyang-hwa",cat:"alignment",
+  def_en:"Estimating how confident a model is in its predictions — critical for high-stakes decisions.",
+  def_ko:"모델의 예측에 대한 신뢰도를 추정하는 것으로, 고위험 결정에 중요합니다." },
+{ ko:"AI 거버넌스",       en:"AI governance",            roman:"AI geo-beo-neun-seu",  cat:"alignment" },
+{ ko:"AI 윤리",           en:"AI ethics",                roman:"AI yun-li",            cat:"alignment" },
+{ ko:"공정성",            en:"fairness (ML)",            roman:"gong-jeong-seong",     cat:"alignment",
+  def_en:"Ensuring a model doesn't discriminate based on protected attributes like race, gender, or religion.",
+  def_ko:"모델이 인종, 성별, 종교와 같은 보호 속성에 따라 차별하지 않도록 보장하는 것입니다." },
+{ ko:"편향",              en:"bias (ML)",                roman:"pyeon-hyang",          cat:"alignment",
+  def_en:"Systematic errors in model outputs due to flawed training data or architecture assumptions.",
+  def_ko:"결함있는 학습 데이터나 아키텍처 가정으로 인한 모델 출력의 체계적 오류입니다." },
+{ ko:"인간의 감독",       en:"human oversight",          roman:"in-gan-ui gam-dok",    cat:"alignment" },
+{ ko:"자율 무기",         en:"autonomous weapons",       roman:"ja-yul mu-gi",         cat:"alignment" },
+{ ko:"실존적 위험",       en:"existential risk (AI)",    roman:"sil-jon-jeok wi-heom", cat:"alignment",
+  def_en:"The possibility that advanced AI systems could cause irreversible harm at civilizational scale.",
+  def_ko:"고급 AI 시스템이 문명 규모에서 돌이킬 수 없는 해를 야기할 수 있다는 가능성입니다." },
+
+// ─────────────────────────────────────────────────────────────
+//  CORPORATE
+// ─────────────────────────────────────────────────────────────
+{ ko:"보고서",             en:"report",                  roman:"bo-go-seo",            cat:"corporate" },
+{ ko:"회의",               en:"meeting",                 roman:"hoe-ui",               cat:"corporate" },
+{ ko:"프레젠테이션",       en:"presentation",            roman:"peu-re-jen-te-i-syeon",cat:"corporate" },
+{ ko:"협력",               en:"collaboration",           roman:"hyeob-nyeok",          cat:"corporate" },
+{ ko:"연구 결과",          en:"research findings",       roman:"yeon-gu gyeol-gwa",    cat:"corporate" },
+{ ko:"취약점 평가",        en:"vulnerability assessment",roman:"chwi-yak-jeom pyeong-ga",cat:"corporate" },
+{ ko:"위험 관리",          en:"risk management",         roman:"wi-heom gwal-li",      cat:"corporate" },
+{ ko:"보안 정책",          en:"security policy",         roman:"bo-an jeong-chaek",    cat:"corporate" },
+{ ko:"감사",               en:"audit",                   roman:"gam-sa",               cat:"corporate" },
+{ ko:"이사회",             en:"board of directors",      roman:"i-sa-hoe",             cat:"corporate" },
+{ ko:"최고경영자",         en:"CEO",                     roman:"choe-go-gyeong-yeong-ja",cat:"corporate" },
+{ ko:"최고정보보안책임자", en:"CISO",                    roman:"choe-go-jeong-bo-bo-an-chaek-im-ja",cat:"corporate" },
+{ ko:"최고기술책임자",     en:"CTO",                     roman:"choe-go-gi-sul-chaek-im-ja",cat:"corporate" },
+{ ko:"보안 인식 교육",     en:"security awareness training",roman:"bo-an in-sik gyo-yuk",cat:"corporate" },
+{ ko:"내부 감사",          en:"internal audit",          roman:"nae-bu gam-sa",        cat:"corporate" },
+{ ko:"외부 감사",          en:"external audit",          roman:"oe-bu gam-sa",         cat:"corporate" },
+{ ko:"컴플라이언스",       en:"compliance",              roman:"keom-peul-la-i-eon-seu",cat:"corporate" },
+{ ko:"규정 준수",          en:"regulatory compliance",   roman:"gyu-jeong jun-su",     cat:"corporate" },
+{ ko:"개인정보 보호",      en:"privacy protection",      roman:"gae-in-jeong-bo bo-ho",cat:"corporate" },
+{ ko:"데이터 거버넌스",    en:"data governance",         roman:"de-i-teo geo-beo-neun-seu",cat:"corporate" },
+{ ko:"클라우드 보안",      en:"cloud security",          roman:"keul-la-u-deu bo-an",  cat:"corporate" },
+{ ko:"접근 권한 검토",     en:"access rights review",    roman:"jeop-geun gwon-han geom-to",cat:"corporate" },
+{ ko:"이해 충돌",          en:"conflict of interest",    roman:"i-hae chung-dol",      cat:"corporate" },
+{ ko:"내부 고발",          en:"whistleblowing",          roman:"nae-bu go-bal",        cat:"corporate" },
+{ ko:"제3자 위험",         en:"third-party risk",        roman:"je-sam-ja wi-heom",    cat:"corporate" },
+{ ko:"비밀 유지 협약",     en:"NDA",                     roman:"bi-mil yu-ji hyeo-byak",cat:"corporate" },
+{ ko:"지식재산권",         en:"intellectual property",   roman:"ji-sik-jae-san-gwon",  cat:"corporate" },
+{ ko:"서비스 수준 협약",   en:"SLA",                     roman:"seo-bi-seu su-jun hyeo-byak",cat:"corporate" },
+{ ko:"표준 운영 절차",     en:"SOP",                     roman:"pyo-jun un-yeong jeol-cha",cat:"corporate" },
+{ ko:"비상 대응 계획",     en:"emergency response plan", roman:"bi-sang dae-eung gye-hoek",cat:"corporate" },
+{ ko:"사이버 보험",        en:"cyber insurance",         roman:"sa-i-beo bo-heom",     cat:"corporate" },
+{ ko:"로드맵",             en:"roadmap",                 roman:"ro-deu-maep",          cat:"corporate" },
+{ ko:"핵심 성과 지표",     en:"KPI",                     roman:"haek-sim seong-gwa ji-pyo",cat:"corporate" },
+{ ko:"이해관계자",         en:"stakeholder",             roman:"i-hae-gwal-gye-ja",    cat:"corporate" },
+{ ko:"예산",               en:"budget",                  roman:"ye-san",               cat:"corporate" },
+{ ko:"마감일",             en:"deadline",                roman:"ma-gam-il",            cat:"corporate" },
+{ ko:"우선순위",           en:"priority",                roman:"u-seon-sun-wi",        cat:"corporate" },
+
+// ─────────────────────────────────────────────────────────────
+//  SENTENCES
+// ─────────────────────────────────────────────────────────────
+{ ko:"이 시스템에는 취약점이 있습니다.", en:"This system has vulnerabilities.", roman:"i si-seu-tem-e-neun chwi-yak-jeom-i it-seum-ni-da.",cat:"sentences" },
+{ ko:"적대적 공격에 대한 방어가 필요합니다.", en:"Defense against adversarial attacks is necessary.", roman:"jeok-dae-jeok gong-gyeok-e dae-han bang-eo-ga pi-ryo-ham-ni-da.",cat:"sentences" },
+{ ko:"이 모델은 데이터 포이즈닝에 취약합니다.", en:"This model is vulnerable to data poisoning.", roman:"i mo-del-eun de-i-teo po-i-jeu-ning-e chwi-yak-ham-ni-da.",cat:"sentences" },
+{ ko:"차분 프라이버시를 적용했습니다.", en:"We applied differential privacy.", roman:"cha-bun peu-ra-i-beo-si-reul jeok-yong-haet-seum-ni-da.",cat:"sentences" },
+{ ko:"정렬 연구는 매우 중요합니다.", en:"Alignment research is very important.", roman:"jeong-nyeol yeon-gu-neun mae-u jung-yo-ham-ni-da.",cat:"sentences" },
+{ ko:"보상 해킹은 피해야 합니다.", en:"Reward hacking must be avoided.", roman:"bo-sang hae-king-eun pi-hae-ya ham-ni-da.",cat:"sentences" },
+{ ko:"모델의 해석 가능성을 높여야 합니다.", en:"We must improve model interpretability.", roman:"mo-del-ui hae-seok ga-neung-seong-eul no-pyeo-ya ham-ni-da.",cat:"sentences" },
+{ ko:"연합 학습으로 프라이버시를 보호합니다.", en:"Federated learning protects privacy.", roman:"yeon-hab hak-seup-eu-ro peu-ra-i-beo-si-reul bo-ho-ham-ni-da.",cat:"sentences" },
+{ ko:"이 취약점은 즉시 패치해야 합니다.", en:"This vulnerability must be patched immediately.", roman:"i chwi-yak-jeom-eun jeuk-si pae-chi-hae-ya ham-ni-da.",cat:"sentences" },
+{ ko:"침해 사고 대응 계획을 수립했습니다.", en:"We established an incident response plan.", roman:"chim-hae sa-go dae-eung gye-hoek-eul su-lip-haet-seum-ni-da.",cat:"sentences" },
+{ ko:"공급망 보안을 강화해야 합니다.", en:"We need to strengthen supply chain security.", roman:"gong-geup-mang bo-an-eul gang-hwa-hae-ya ham-ni-da.",cat:"sentences" },
+{ ko:"제로 트러스트 아키텍처를 도입했습니다.", en:"We adopted a zero trust architecture.", roman:"je-ro teu-reo-seu-teu a-ki-tek-cheo-reul do-ip-haet-seum-ni-da.",cat:"sentences" },
+{ ko:"AI 거버넌스 프레임워크가 필요합니다.", en:"An AI governance framework is needed.", roman:"AI geo-beo-neun-seu peu-re-im-wo-keu-ga pi-ryo-ham-ni-da.",cat:"sentences" },
+{ ko:"이 프롬프트 인젝션은 심각한 위험입니다.", en:"This prompt injection is a serious risk.", roman:"i peu-rom-peu-teu in-jek-syeon-eun sim-gak-han wi-heom-im-ni-da.",cat:"sentences" },
+{ ko:"메사 최적화는 정렬 분야의 핵심 문제입니다.", en:"Mesa-optimization is a key problem in alignment.", roman:"me-sa choe-jeok-hwa-neun jeong-nyeol bun-ya-ui haek-sim mun-je-im-ni-da.",cat:"sentences" },
+{ ko:"헌법적 AI는 원칙을 명시적으로 사용합니다.", en:"Constitutional AI uses principles explicitly.", roman:"heon-beob-jeok AI-neun won-chik-eul myeong-si-jeok-eu-ro sa-yong-ham-ni-da.",cat:"sentences" },
+{ ko:"이 데이터셋에는 편향이 있습니다.", en:"This dataset has biases.", roman:"i de-i-teo-set-e-neun pyeon-hyang-i it-seum-ni-da.",cat:"sentences" },
+{ ko:"암호화 키를 안전하게 관리해야 합니다.", en:"Encryption keys must be managed securely.", roman:"am-ho-hwa ki-reul an-jeon-ha-ge gwal-li-hae-ya ham-ni-da.",cat:"sentences" },
+{ ko:"보안 감사를 정기적으로 실시합니다.", en:"We conduct security audits regularly.", roman:"bo-an gam-sa-reul jeong-gi-jeok-eu-ro sil-si-ham-ni-da.",cat:"sentences" },
+{ ko:"적대적 강건성 평가 결과를 보고합니다.", en:"We report adversarial robustness evaluation results.", roman:"jeok-dae-jeok gang-geon-seong pyeong-ga gyeol-gwa-reul bo-go-ham-ni-da.",cat:"sentences" },
+
+// ─────────────────────────────────────────────────────────────
+//  ACADEMIC
+// ─────────────────────────────────────────────────────────────
+{ ko:"본 논문에서는",      en:"In this paper",           roman:"bon non-mun-e-seo-neun",cat:"academic" },
+{ ko:"이를 위해",          en:"To this end",             roman:"i-reul wi-hae",        cat:"academic" },
+{ ko:"우리는 제안한다",    en:"We propose",              roman:"u-ri-neun je-an-han-da",cat:"academic" },
+{ ko:"실험 결과",          en:"Experimental results",    roman:"sil-heom gyeol-gwa",   cat:"academic" },
+{ ko:"기존 방법과 비교하여",en:"Compared to existing methods",roman:"gi-jon bang-beob-gwa bi-gyo-ha-yeo",cat:"academic" },
+{ ko:"향후 연구 방향",     en:"Future research directions",roman:"hyang-hu yeon-gu bang-hyang",cat:"academic" },
+{ ko:"본 연구의 한계",     en:"Limitations of this work",roman:"bon yeon-gu-ui han-gye",cat:"academic" },
+{ ko:"최첨단 성능을 달성한다",en:"Achieves state-of-the-art performance",roman:"choe-cheom-dan seong-neung-eul dal-seong-han-da",cat:"academic" },
+{ ko:"광범위한 실험을 통해",en:"Through extensive experiments",roman:"gwang-beom-wi-han sil-heom-eul tong-hae",cat:"academic" },
+{ ko:"초록",               en:"abstract",                roman:"cho-rok",              cat:"academic" },
+{ ko:"서론",               en:"introduction",            roman:"seo-ron",              cat:"academic" },
+{ ko:"관련 연구",          en:"related work",            roman:"gwal-lyeon yeon-gu",   cat:"academic" },
+{ ko:"방법론",             en:"methodology",             roman:"bang-beob-lon",        cat:"academic" },
+{ ko:"결론",               en:"conclusion",              roman:"gyeol-lon",            cat:"academic" },
+{ ko:"참고문헌",           en:"references",              roman:"cham-go-mun-heon",     cat:"academic" },
+{ ko:"동료 심사",          en:"peer review",             roman:"dong-lyo sim-sa",      cat:"academic" },
+{ ko:"논문 투고",          en:"paper submission",        roman:"non-mun tu-go",        cat:"academic" },
+{ ko:"구두 발표",          en:"oral presentation",       roman:"gu-du bal-pyo",        cat:"academic" },
+{ ko:"포스터 발표",        en:"poster presentation",     roman:"po-seu-teo bal-pyo",   cat:"academic" },
+{ ko:"교차 검증",          en:"cross-validation",        roman:"gyo-cha geom-jeung",   cat:"academic" },
+{ ko:"기준 모델",          en:"baseline model",          roman:"gi-jun mo-del",        cat:"academic" },
+{ ko:"소거 연구",          en:"ablation study",          roman:"so-geo yeon-gu",       cat:"academic",
+  def_en:"An experiment systematically removing components of a model to determine each component's contribution.",
+  def_ko:"모델의 각 구성요소의 기여도를 파악하기 위해 체계적으로 제거하는 실험입니다." },
+{ ko:"제로샷 일반화",      en:"zero-shot generalization", roman:"je-ro-syat il-ban-hwa",cat:"academic" },
+{ ko:"인간 평가",          en:"human evaluation",        roman:"in-gan pyeong-ga",     cat:"academic" },
+{ ko:"자동 평가",          en:"automatic evaluation",    roman:"ja-dong pyeong-ga",    cat:"academic" },
+{ ko:"우리는 보인다",      en:"We demonstrate",          roman:"u-ri-neun bo-in-da",   cat:"academic" },
+{ ko:"이 연구는 기여한다", en:"This work contributes",   roman:"i yeon-gu-neun gi-yeo-han-da",cat:"academic" },
+{ ko:"한국과학기술원",     en:"KAIST",                   roman:"han-guk-gwa-hak-gi-sul-won",cat:"academic" },
+{ ko:"서울대학교",         en:"Seoul National University",roman:"seo-ul-dae-hak-gyo",  cat:"academic" },
+{ ko:"삼성전자",           en:"Samsung Electronics",     roman:"sam-seong-jeon-ja",    cat:"academic" },
+{ ko:"네이버",             en:"Naver Corporation",       roman:"ne-i-beo",             cat:"academic" },
+{ ko:"카카오",             en:"Kakao",                   roman:"ka-ka-o",              cat:"academic" },
+];
+
+const CATEGORIES = [
+  { id:"all",        label:"All" },
+  { id:"core",       label:"🛡 Core Security" },
+  { id:"attack",     label:"⚔️ Attacks" },
+  { id:"defense",    label:"🔒 Defense" },
+  { id:"crypto",     label:"🔐 Crypto" },
+  { id:"ai",         label:"🤖 AI / ML" },
+  { id:"alignment",  label:"🧭 Alignment" },
+  { id:"corporate",  label:"🏢 Corporate" },
+  { id:"sentences",  label:"💬 Sentences" },
+  { id:"academic",   label:"📄 Academic" },
+];
+
+
+const KB_ROWS = [
+  [{l:'q',k:'ㅂ'},{l:'w',k:'ㅈ'},{l:'e',k:'ㄷ'},{l:'r',k:'ㄱ'},{l:'t',k:'ㅅ'},{l:'y',k:'ㅛ'},{l:'u',k:'ㅕ'},{l:'i',k:'ㅑ'},{l:'o',k:'ㅐ'},{l:'p',k:'ㅔ'}],
+  [{l:'a',k:'ㅁ'},{l:'s',k:'ㄴ'},{l:'d',k:'ㅇ'},{l:'f',k:'ㄹ'},{l:'g',k:'ㅎ'},{l:'h',k:'ㅗ'},{l:'j',k:'ㅓ'},{l:'k',k:'ㅏ'},{l:'l',k:'ㅣ'}],
+  [{l:'z',k:'ㅋ'},{l:'x',k:'ㅌ'},{l:'c',k:'ㅊ'},{l:'v',k:'ㅍ'},{l:'b',k:'ㅠ'},{l:'n',k:'ㅜ'},{l:'m',k:'ㅡ'}],
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let state = {
+  currentCat: "all",
+  phraseIndex: 0,
+  filteredPhrases: [],
+  showRoman: true,
+  showDef: false,
+  showCode: false,
+  totalCorrect: 0,
+  streak: 0,
+  startTime: null,
+  wpmHistory: [],
+  timerInterval: null,
+  perPhrasePB: {},
+  currentTarget: 0,
+  difficulty: 'easy',
+  shuffle: false,
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  buildCategoryPills('cat-container', selectCat);
+  buildCategoryPills('gloss-cat-container', selectGlossCat);
+  buildMiniKeyboard();
+  buildFullKeyboard();
+  filterAndLoad();
+  document.getElementById('typing-input').addEventListener('input', onInput);
+  document.getElementById('typing-input').addEventListener('keydown', onKeydown);
+  loadStats();
+}
+
+function loadStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem('korean_stats_v2') || '{}');
+    if (s.streak)        state.streak = s.streak;
+    if (s.totalCorrect)  state.totalCorrect = s.totalCorrect;
+    if (s.perPhrasePB)   state.perPhrasePB = s.perPhrasePB;
+    updateStatsBar(0, state.streak);
+    const savedDiff = localStorage.getItem('korean_diff');
+    if (savedDiff && DIFFICULTY[savedDiff]) setDifficulty(savedDiff);
+    else setDifficulty('easy');
+  } catch(e) { setDifficulty('easy'); }
+  // restore text size
+  try {
+    const si = parseInt(localStorage.getItem('sec_textsize') || '0');
+    textSizeIdx = ((si % TEXT_SIZES.length) + TEXT_SIZES.length) % TEXT_SIZES.length;
+    if (TEXT_SIZES[textSizeIdx]) document.body.classList.add(TEXT_SIZES[textSizeIdx]);
+    document.getElementById('textsize-btn').textContent = TEXT_LABELS[textSizeIdx];
+  } catch(e) {}
+  // restore theme
+  try {
+    if (localStorage.getItem('sec_theme') === 'light') {
+      isLight = true;
+      document.body.classList.add('light');
+      document.getElementById('theme-btn').textContent = '🌙';
+    }
+  } catch(e) {}
+}
+
+function saveStats() {
+  try {
+    localStorage.setItem('korean_stats_v2', JSON.stringify({
+      streak: state.streak, totalCorrect: state.totalCorrect, perPhrasePB: state.perPhrasePB,
+    }));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SMART TIMER
+// ═══════════════════════════════════════════════════════════════
+function startTimer() {
+  stopTimer();
+  state.startTime = Date.now();
+  state.timerInterval = setInterval(tickTimer, 50);
+}
+
+function stopTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+function tickTimer() {
+  if (!state.startTime) return;
+  const elapsed   = (Date.now() - state.startTime) / 1000;
+  const pace      = DIFFICULTY[state.difficulty].pace;
+  const target    = state.currentTarget * pace;
+  const warnAt    = target * WARN_MULT;
+  const dangerAt  = target * DANGER_MULT;
+  const el        = document.getElementById('timer-display');
+  el.textContent  = elapsed.toFixed(1);
+  el.className    = 'timer-val' +
+    (elapsed >= dangerAt ? ' danger' : elapsed >= warnAt ? ' warning' : '');
+  const pct  = Math.min(100, (elapsed / dangerAt) * 100);
+  const bar  = document.getElementById('pace-bar');
+  bar.style.width = pct + '%';
+  bar.style.background =
+    elapsed >= dangerAt ? 'var(--wrong)' :
+    elapsed >= warnAt   ? '#ffab00'      : 'var(--correct)';
+}
+
+function resetTimerDisplay() {
+  stopTimer();
+  state.startTime = null;
+  document.getElementById('timer-display').textContent = '0.0';
+  document.getElementById('timer-display').className = 'timer-val';
+  document.getElementById('pace-bar').style.width = '0%';
+  document.getElementById('pace-bar').style.background = 'var(--correct)';
+}
+
+function setDifficulty(level) {
+  state.difficulty = level;
+  document.querySelectorAll('.diff-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.diff === level));
+  // update the pace label in the timer row
+  const d = DIFFICULTY[level];
+  document.getElementById('diff-label').textContent = d.emoji + ' ' + d.label;
+  // save preference
+  try { localStorage.setItem('korean_diff', level); } catch(e) {}
+}
+
+function updatePBDisplay(phraseKey) {
+  const pb = state.perPhrasePB[phraseKey];
+  document.getElementById('timer-pb').textContent   = pb   ? pb.toFixed(2) + 's' : '—';
+  document.getElementById('timer-last').textContent = '—';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CATEGORIES
+// ═══════════════════════════════════════════════════════════════
+function buildCategoryPills(containerId, handler) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-pill' + (cat.id === state.currentCat ? ' active' : '');
+    btn.textContent = cat.label;
+    btn.dataset.cat = cat.id;
+    btn.onclick = () => handler(cat.id);
+    c.appendChild(btn);
+  });
+}
+
+function selectCat(catId) {
+  state.currentCat = catId; state.phraseIndex = 0;
+  document.querySelectorAll('#cat-container .cat-pill').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === catId));
+  filterAndLoad();
+}
+
+function selectGlossCat(catId) {
+  state.currentCat = catId;
+  document.querySelectorAll('#gloss-cat-container .cat-pill').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === catId));
+  renderGlossary();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOAD PHRASE
+// ═══════════════════════════════════════════════════════════════
+function filterAndLoad() {
+  const base = state.currentCat === 'all'
+    ? [...PHRASES]
+    : PHRASES.filter(p => p.cat === state.currentCat);
+  if (state.shuffle) {
+    for (let i = base.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [base[i], base[j]] = [base[j], base[i]];
+    }
+  }
+  state.filteredPhrases = base;
+  if (state.phraseIndex >= state.filteredPhrases.length) state.phraseIndex = 0;
+  loadPhrase();
+}
+
+function toggleShuffle() {
+  state.shuffle = !state.shuffle;
+  const btn = document.getElementById('shuffle-btn');
+  btn.textContent = state.shuffle ? '🔀 Shuffled' : '🔀 Shuffle';
+  btn.style.background    = state.shuffle ? 'var(--accent2)' : '';
+  btn.style.color         = state.shuffle ? '#fff' : '';
+  btn.style.borderColor   = state.shuffle ? 'var(--accent2)' : '';
+  state.phraseIndex = 0;
+  filterAndLoad();
+}
+
+function loadPhrase() {
+  const p = state.filteredPhrases[state.phraseIndex];
+  if (!p) return;
+
+  state.currentTarget = [...p.ko].length;
+
+  document.getElementById('phrase-cat').textContent       = p.cat.toUpperCase();
+  document.getElementById('phrase-counter').textContent   = `${state.phraseIndex + 1} / ${state.filteredPhrases.length}`;
+  document.getElementById('english-display').textContent  = '→ ' + p.en;
+  document.getElementById('roman-display').textContent    = state.showRoman ? '[' + p.roman + ']' : '';
+
+  // Definition (AI terms)
+  const hasdef = p.def_en && p.def_ko;
+  const hascode = !!p.code;
+  const toggle = document.getElementById('def-toggle');
+  const codetog = document.getElementById('code-toggle');
+  const box    = document.getElementById('definition-box');
+  const codebox = document.getElementById('code-box');
+  if (hasdef) {
+    toggle.style.display = 'inline-block';
+    document.getElementById('def-en').textContent = p.def_en;
+    document.getElementById('def-ko').textContent = p.def_ko;
+    if (state.showDef) { box.classList.add('visible'); toggle.textContent = '▾ Definition'; }
+    else               { box.classList.remove('visible'); toggle.textContent = '▸ Definition'; }
+  } else {
+    toggle.style.display = 'none';
+    box.classList.remove('visible');
+  }
+  if (hascode) {
+    codetog.style.display = 'inline-block';
+    document.getElementById('code-pre').innerHTML = p.code;
+    if (state.showCode) { codebox.classList.add('visible'); codetog.textContent = '▾ PyTorch'; }
+    else                { codebox.classList.remove('visible'); codetog.textContent = '▸ PyTorch'; }
+  } else {
+    codetog.style.display = 'none';
+    codebox.classList.remove('visible');
+  }
+
+  // Char spans
+  const disp = document.getElementById('korean-display');
+  disp.innerHTML = '';
+  [...p.ko].forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'char ' + (i === 0 ? 'current' : 'pending');
+    span.textContent = ch;
+    disp.appendChild(span);
+  });
+
+  document.getElementById('typing-input').value = '';
+  document.getElementById('typing-input').classList.remove('error');
+  resetTimerDisplay();
+  updatePBDisplay(p.ko);
+
+  const badge = document.getElementById('last-time-badge');
+  badge.className = 'last-time-badge hidden'; badge.textContent = '';
+
+  const pct = state.filteredPhrases.length > 1
+    ? (state.phraseIndex / (state.filteredPhrases.length - 1)) * 100 : 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════════════
+function onInput(e) {
+  const input = e.target, typed = input.value;
+  const p = state.filteredPhrases[state.phraseIndex];
+  if (!p) return;
+
+  if (!state.startTime && typed.length > 0) startTimer();
+
+  const target = p.ko;
+  document.querySelectorAll('#korean-display .char').forEach((span, i) => {
+    span.className = 'char ' + (i < typed.length
+      ? (typed[i] === target[i] ? 'correct' : 'wrong')
+      : i === typed.length ? 'current' : 'pending');
+  });
+  input.classList.remove('error');
+
+  if (typed === target) {
+    const elapsed = (Date.now() - state.startTime) / 1000;
+    stopTimer();
+    document.getElementById('timer-display').textContent = elapsed.toFixed(2);
+
+    const wpm = Math.round((target.length / 5) / (elapsed / 60));
+    const key = p.ko, oldPB = state.perPhrasePB[key];
+    const isNewPB = !oldPB || elapsed < oldPB;
+    if (isNewPB) state.perPhrasePB[key] = parseFloat(elapsed.toFixed(2));
+
+    document.getElementById('timer-last').textContent = elapsed.toFixed(2) + 's';
+    document.getElementById('timer-pb').textContent   = state.perPhrasePB[key].toFixed(2) + 's';
+
+    const badge = document.getElementById('last-time-badge');
+    if (isNewPB) { badge.textContent = '🏆 New PB! ' + elapsed.toFixed(2) + 's'; badge.className = 'last-time-badge pb'; }
+    else         { badge.textContent = '✓ ' + elapsed.toFixed(2) + 's  (PB: ' + state.perPhrasePB[key].toFixed(2) + 's)'; badge.className = 'last-time-badge'; }
+
+    state.streak++; state.totalCorrect++;
+    saveStats();
+    updateStatsBar(wpm, state.streak);
+    showResultFlash(wpm, elapsed);
+    setTimeout(() => nextPhrase(), 900);
+  }
+}
+
+function onKeydown(e) {
+  if (e.key === 'Enter') nextPhrase();
+  if (e.key === 'Escape') { document.getElementById('typing-input').value = ''; loadPhrase(); }
+}
+
+function nextPhrase() {
+  stopTimer();
+  state.phraseIndex = (state.phraseIndex + 1) % state.filteredPhrases.length;
+  loadPhrase();
+  document.getElementById('typing-input').focus();
+}
+
+function toggleRoman() {
+  state.showRoman = !state.showRoman;
+  const p = state.filteredPhrases[state.phraseIndex];
+  document.getElementById('roman-display').textContent = state.showRoman && p ? '[' + p.roman + ']' : '';
+}
+
+// ── TEXT SIZE ──────────────────────────────────────────────────
+const TEXT_SIZES = ['', 'text-lg', 'text-xl'];
+const TEXT_LABELS = ['Aa', 'Aa+', 'Aa++'];
+let textSizeIdx = 0;
+function cycleTextSize() {
+  if (TEXT_SIZES[textSizeIdx]) document.body.classList.remove(TEXT_SIZES[textSizeIdx]);
+  textSizeIdx = (textSizeIdx + 1) % TEXT_SIZES.length;
+  if (TEXT_SIZES[textSizeIdx]) document.body.classList.add(TEXT_SIZES[textSizeIdx]);
+  document.getElementById('textsize-btn').textContent = TEXT_LABELS[textSizeIdx];
+  try { localStorage.setItem('sec_textsize', textSizeIdx); } catch(e){}
+}
+
+// ── THEME ──────────────────────────────────────────────────────
+let isLight = false;
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '🌙' : '☀️';
+  try { localStorage.setItem('sec_theme', isLight ? 'light' : 'dark'); } catch(e){}
+}
+
+function toggleDef() {
+  state.showDef = !state.showDef;
+  const box = document.getElementById('definition-box');
+  const tog = document.getElementById('def-toggle');
+  if (state.showDef) { box.classList.add('visible'); tog.textContent = '▾ Definition'; }
+  else               { box.classList.remove('visible'); tog.textContent = '▸ Definition'; }
+}
+
+function toggleCode() {
+  state.showCode = !state.showCode;
+  const box = document.getElementById('code-box');
+  const tog = document.getElementById('code-toggle');
+  if (state.showCode) { box.classList.add('visible'); tog.textContent = '▾ PyTorch'; }
+  else                { box.classList.remove('visible'); tog.textContent = '▸ PyTorch'; }
+}
+
+function speakKorean() {
+  const p = state.filteredPhrases[state.phraseIndex];
+  if (!p) return;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(p.ko);
+    u.lang = 'ko-KR'; u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════════
+function updateStatsBar(wpm, streak) {
+  if (wpm > 0) {
+    state.wpmHistory.push(wpm);
+    const avg = Math.round(state.wpmHistory.reduce((a,b)=>a+b,0)/state.wpmHistory.length);
+    document.getElementById('stat-wpm').textContent = avg;
+  }
+  document.getElementById('stat-acc').textContent    = '100%';
+  document.getElementById('stat-streak').textContent = streak;
+}
+
+function showResultFlash(wpm, elapsed) {
+  const f = document.getElementById('result-flash');
+  document.getElementById('flash-wpm').textContent =
+    (elapsed ? elapsed.toFixed(2) + 's' : '') + (wpm > 0 ? ' · ' + wpm + ' WPM' : '');
+  f.classList.add('show');
+  setTimeout(() => f.classList.remove('show'), 900);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GLOSSARY
+// ═══════════════════════════════════════════════════════════════
+function renderGlossary() {
+  const list = state.currentCat === 'all' ? PHRASES : PHRASES.filter(p => p.cat === state.currentCat);
+  const grid = document.getElementById('glossary-grid');
+  grid.innerHTML = '';
+  list.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'glossary-item';
+    const hasDef = p.def_en && p.def_ko;
+    div.innerHTML = `
+      <div class="gi-header">
+        <div class="gi-ko">${p.ko}</div>
+        <div class="gi-right">
+          <div class="gi-en">${p.en}</div>
+          <div class="gi-rom">${p.roman}</div>
+          <div class="gi-cat">${p.cat}</div>
+        </div>
+      </div>
+      ${hasDef ? `<div class="gi-def">${p.def_en}<br/><span style="color:var(--accent2)">${p.def_ko}</span></div>` : ''}
+    `;
+    if (hasDef) {
+      div.querySelector('.gi-ko').style.cursor = 'pointer';
+      div.onclick = (e) => {
+        const defEl = div.querySelector('.gi-def');
+        if (defEl) { defEl.classList.toggle('show'); e.stopPropagation(); }
+      };
+    }
+    // Tap to practice
+    div.addEventListener('dblclick', () => {
+      switchTab('practice');
+      const idx = PHRASES.indexOf(p);
+      state.currentCat = 'all';
+      filterAndLoad();
+      state.phraseIndex = idx;
+      loadPhrase();
+      document.getElementById('typing-input').focus();
+    });
+    grid.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  KEYBOARDS
+// ═══════════════════════════════════════════════════════════════
+function buildMiniKeyboard() {
+  const kb = document.getElementById('mini-keyboard');
+  KB_ROWS.forEach(row => {
+    const rowDiv = document.createElement('div'); rowDiv.className = 'key-row';
+    row.forEach(key => {
+      const k = document.createElement('div'); k.className = 'key';
+      k.innerHTML = `<span class="key-korean">${key.k}</span><span class="key-latin">${key.l}</span>`;
+      rowDiv.appendChild(k);
+    });
+    kb.appendChild(rowDiv);
+  });
+}
+
+function buildFullKeyboard() {
+  const kb = document.getElementById('full-keyboard');
+  KB_ROWS.forEach(row => {
+    const rowDiv = document.createElement('div'); rowDiv.className = 'kb-row';
+    row.forEach(key => {
+      const k = document.createElement('div'); k.className = 'kb-key';
+      k.innerHTML = `<div class="top">${key.k}</div><div class="bot">${key.l.toUpperCase()}</div>`;
+      rowDiv.appendChild(k);
+    });
+    kb.appendChild(rowDiv);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.getElementById('practice-view').style.display  = tab === 'practice'  ? 'block' : 'none';
+  document.getElementById('glossary-view').style.display  = tab === 'glossary'  ? 'block' : 'none';
+  document.getElementById('keyboard-view').style.display  = tab === 'keyboard'  ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i) =>
+    t.classList.toggle('active', ['practice','glossary','keyboard'][i] === tab));
+  if (tab === 'glossary') renderGlossary();
+  if (tab === 'practice') setTimeout(() => document.getElementById('typing-input').focus(), 100);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════════════
+init();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
