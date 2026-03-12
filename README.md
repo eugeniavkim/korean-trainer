@@ -36,20 +36,6 @@ Hundreds of terms across 8 technical categories, with definitions, romanization,
 
 ---
 
-## PyTorch snippets included for
-
-- 적대적 예제 — FGSM attack
-- 데이터 포이즈닝 — label-flip poisoning
-- 적대적 훈련 — PGD adversarial training loop
-- 트랜스포머 — TransformerBlock class
-- 차분 프라이버시 — Opacus DP-SGD
-- 연합 학습 — FedAvg aggregation
-- 역전파 — annotated training step
-- 지식 증류 — soft/hard distillation loss
-- 멤버십 추론 공격 — shadow model MIA
-
----
-
 ## Install on iPhone
 
 1. Open the [URL](https://eugeniavkim.github.io/korean-trainer/) in **Safari**
